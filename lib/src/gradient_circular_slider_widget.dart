@@ -1,86 +1,48 @@
 import 'dart:math' as math;
+import 'package:auto_size_text_field/auto_size_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
-/// A beautiful circular slider widget with gradient progress and auto-fitting text.
+/// A beautiful circular slider widget with gradient progress and an editable value.
 class GradientCircularSlider extends StatefulWidget {
-  /// Minimum value of the slider
   final double minValue;
-
-  /// Maximum value of the slider
   final double maxValue;
-
-  /// Initial value of the slider
   final double initialValue;
-
-  /// Colors for the circular sweep gradient
   final List<Color> gradientColors;
-
-  /// Stroke width of the circle
   final double ringThickness;
-
-  /// Symbol before number (e.g., '$', '�', '%')
   final String prefix;
-
-  /// Ratio of prefix font size to main font
   final double prefixScale;
-
-  /// Text shown on the top arc
-  final String? labelText;
-
-  /// Enables tactile feedback
   final bool enableHaptics;
-
-  /// Color for central text
   final Color textColor;
-
-  /// Custom TextStyle for label
+  final int decimalPrecision;
+  final ValueChanged<double>? onChanged;
+  final VoidCallback? onChangeStart;
+  final VoidCallback? onChangeEnd;
+  final List<BoxShadow>? knobShadows;
+  final double knobRadius;
+  final Color? knobColor;
+  final Color? ringBackgroundColor;
+  final Duration animationDuration;
+  final Curve animationCurve;
+  final String? labelText;
   final TextStyle? labelStyle;
 
-  /// Decimal places for displayed value
-  final int decimalPrecision;
-
-  /// Callback when value changes
-  final ValueChanged<double>? onChanged;
-
-  /// Callback when dragging starts
-  final VoidCallback? onChangeStart;
-
-  /// Callback when dragging ends
-  final VoidCallback? onChangeEnd;
-
-  /// Shadow or glow effect behind the knob
-  final List<BoxShadow>? knobShadows;
-
-  /// Size of the draggable knob
-  final double knobRadius;
-
-  /// Color of the knob
-  final Color? knobColor;
-
-  /// Background color of the ring
-  final Color? ringBackgroundColor;
-
-  /// Animation duration for programmatic changes
-  final Duration animationDuration;
-
-  /// Animation curve for value changes
-  final Curve animationCurve;
+  // Added properties for the inner circular label text
+  final String? innerLabelText;
+  final TextStyle? innerLabelStyle;
 
   GradientCircularSlider({
     super.key,
     this.minValue = 0,
     this.maxValue = 100,
     required this.initialValue,
-    this.gradientColors = const [Colors.blue, Colors.green],
+    this.gradientColors = const [Colors.lightBlueAccent, Colors.blue],
     this.ringThickness = 20.0,
     this.prefix = r'$',
     this.prefixScale = 0.6,
-    this.labelText,
     this.enableHaptics = true,
     this.textColor = Colors.white,
-    this.labelStyle,
     this.decimalPrecision = 2,
     this.onChanged,
     this.onChangeStart,
@@ -89,8 +51,13 @@ class GradientCircularSlider extends StatefulWidget {
     this.knobRadius = 15,
     this.knobColor,
     this.ringBackgroundColor,
-    this.animationDuration = const Duration(milliseconds: 300),
+    this.animationDuration = const Duration(milliseconds: 500),
     this.animationCurve = Curves.easeInOut,
+    this.labelText,
+    this.labelStyle,
+    // Add to constructor
+    this.innerLabelText,
+    this.innerLabelStyle,
   })  : assert(minValue < maxValue, 'minValue must be less than maxValue'),
         assert(initialValue >= minValue && initialValue <= maxValue,
             'initialValue must be between minValue and maxValue'),
@@ -99,7 +66,6 @@ class GradientCircularSlider extends StatefulWidget {
             'prefixScale must be between 0 and 1'),
         assert(decimalPrecision >= 0, 'decimalPrecision must be non-negative'),
         assert(knobRadius > 0, 'knobRadius must be positive') {
-    // Runtime validation for gradient colors
     if (gradientColors.length < 2) {
       throw ArgumentError('gradientColors must have at least 2 colors');
     }
@@ -110,27 +76,40 @@ class GradientCircularSlider extends StatefulWidget {
 }
 
 class _GradientCircularSliderState extends State<GradientCircularSlider>
-    with SingleTickerProviderStateMixin {
-  late double _currentValue;
-  late AnimationController _animationController;
-  late Animation<double> _valueAnimation;
+    with TickerProviderStateMixin {
+  late AnimationController _valueAnimationController;
   bool _isDragging = false;
+  bool _isEditing = false;
+  late AnimationController _sizeAnimationController;
+  late Animation<double> _sizeAnimation;
+  final TextEditingController _textController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+  bool _isUpdatingTextProgrammatically = false;
 
   @override
   void initState() {
     super.initState();
-    _currentValue = widget.initialValue;
-    _animationController = AnimationController(
+    _valueAnimationController = AnimationController(
+      vsync: this,
       duration: widget.animationDuration,
+      value: _normalizeValue(widget.initialValue),
+    );
+    _sizeAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 400),
       vsync: this,
     );
-    _valueAnimation = Tween<double>(
-      begin: _currentValue,
-      end: _currentValue,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: widget.animationCurve,
-    ));
+    _sizeAnimation = Tween<double>(begin: 1.0, end: 0.5).animate(
+      CurvedAnimation(
+          parent: _sizeAnimationController, curve: Curves.easeOutBack),
+    );
+    _setText(_denormalizeValue(_valueAnimationController.value)
+        .toStringAsFixed(widget.decimalPrecision));
+    _textController.addListener(_onTextChanged);
+    _focusNode.addListener(() {
+      if (!_focusNode.hasFocus && _isEditing) {
+        _toggleEditMode(forceState: false);
+      }
+    });
   }
 
   @override
@@ -143,165 +122,240 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _valueAnimationController.dispose();
+    _sizeAnimationController.dispose();
+    _textController.removeListener(_onTextChanged);
+    _textController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
-  void _animateToValue(double newValue) {
-    _valueAnimation = Tween<double>(
-      begin: _currentValue,
-      end: newValue,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
+  void _setText(String value) {
+    _isUpdatingTextProgrammatically = true;
+    _textController.text = value;
+    _isUpdatingTextProgrammatically = false;
+  }
+
+  void _onTextChanged() {
+    if (_isUpdatingTextProgrammatically || !_isEditing) return;
+    final newValue = double.tryParse(_textController.text);
+    if (newValue != null) {
+      final clampedValue = newValue.clamp(widget.minValue, widget.maxValue);
+      final normalizedValue = _normalizeValue(clampedValue);
+      _valueAnimationController.animateTo(
+        normalizedValue,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+      widget.onChanged?.call(clampedValue);
+    }
+  }
+
+  void _animateToValue(double denormalizedValue) {
+    final clampedValue =
+        denormalizedValue.clamp(widget.minValue, widget.maxValue);
+    final normalizedValue = _normalizeValue(clampedValue);
+    _valueAnimationController.animateTo(
+      normalizedValue,
+      duration: widget.animationDuration,
       curve: widget.animationCurve,
-    ));
-    _animationController.forward(from: 0).then((_) {
-      setState(() {
-        _currentValue = newValue;
-      });
+    );
+    _setText(clampedValue.toStringAsFixed(widget.decimalPrecision));
+  }
+
+  void _toggleEditMode({bool? forceState}) {
+    setState(() {
+      _isEditing = forceState ?? !_isEditing;
+      if (_isEditing) {
+        _sizeAnimationController.forward();
+        _focusNode.requestFocus();
+      } else {
+        _sizeAnimationController.reverse();
+        _focusNode.unfocus();
+        final enteredValue = double.tryParse(_textController.text) ??
+            _denormalizeValue(_valueAnimationController.value);
+        _animateToValue(enteredValue);
+      }
     });
   }
 
-  double _normalizeValue(double value) {
-    return (value - widget.minValue) / (widget.maxValue - widget.minValue);
-  }
-
-  double _denormalizeValue(double normalizedValue) {
-    return normalizedValue * (widget.maxValue - widget.minValue) +
-        widget.minValue;
-  }
+  double _normalizeValue(double value) =>
+      (value - widget.minValue) / (widget.maxValue - widget.minValue);
+  double _denormalizeValue(double normalizedValue) =>
+      normalizedValue * (widget.maxValue - widget.minValue) + widget.minValue;
 
   void _handlePanUpdate(Offset localPosition, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final angle = math.atan2(
-      localPosition.dy - center.dy,
-      localPosition.dx - center.dx,
-    );
-
-    // Convert angle to 0-1 range
-    // Starting from top (12 o'clock position) and going clockwise
+    final angle =
+        math.atan2(localPosition.dy - center.dy, localPosition.dx - center.dx);
     double normalizedAngle = (angle + math.pi / 2) / (2 * math.pi);
     if (normalizedAngle < 0) normalizedAngle += 1;
-
-    final currentValueNormalized = _normalizeValue(_currentValue);
-
-    // Prevent dragging left (counter-clockwise) when at 0%
-    if (currentValueNormalized <= 0.01 && normalizedAngle > 0.5) {
-      return;
+    final currentValue = _valueAnimationController.value;
+    double newNormalizedValue = normalizedAngle;
+    if (currentValue > 0.75 && newNormalizedValue < 0.25) {
+      newNormalizedValue = 1.0;
+    } else if (currentValue < 0.25 && newNormalizedValue > 0.75) {
+      newNormalizedValue = 0.0;
     }
-
-    // Prevent dragging right (clockwise) when at 100%
-    if (currentValueNormalized >= 0.99 && normalizedAngle < 0.5) {
-      return;
-    }
-
-    // Snap to 0% or 100% when very close to the start/end
-    if (normalizedAngle > 0.99) {
-      normalizedAngle = 1.0;
-    } else if (normalizedAngle < 0.01) {
-      normalizedAngle = 0.0;
-    }
-
-    final newValue = _denormalizeValue(normalizedAngle);
-
-    setState(() {
-      _currentValue = newValue;
-    });
-
-    if (widget.enableHaptics) {
-      HapticFeedback.lightImpact();
-    }
-
-    widget.onChanged?.call(_currentValue);
+    _valueAnimationController.value = newNormalizedValue;
+    final denormalizedValue = _denormalizeValue(newNormalizedValue);
+    _setText(denormalizedValue.toStringAsFixed(widget.decimalPrecision));
+    if (widget.enableHaptics) HapticFeedback.lightImpact();
+    widget.onChanged?.call(denormalizedValue);
   }
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = constraints.biggest;
-        final minDimension = math.min(size.width, size.height);
-
-        return SizedBox(
-          width: minDimension,
-          height: minDimension,
-          child: AnimatedBuilder(
-            animation: _valueAnimation,
-            builder: (context, child) {
-              final animatedValue =
-                  _isDragging ? _currentValue : _valueAnimation.value;
-
-              return GestureDetector(
-                onPanStart: (details) {
-                  setState(() {
-                    _isDragging = true;
-                  });
-                  widget.onChangeStart?.call();
-                  _handlePanUpdate(
-                      details.localPosition, Size(minDimension, minDimension));
-                },
-                onPanUpdate: (details) {
-                  _handlePanUpdate(
-                      details.localPosition, Size(minDimension, minDimension));
-                },
-                onPanEnd: (_) {
-                  _valueAnimation = AlwaysStoppedAnimation(_currentValue);
-
-                  setState(() {
-                    _isDragging = false;
-                  });
-                  widget.onChangeEnd?.call();
-                },
-                child: CustomPaint(
-                  size: Size(minDimension, minDimension),
-                  painter: _CircularSliderPainter(
-                    value: _normalizeValue(animatedValue),
-                    gradientColors: widget.gradientColors,
-                    ringThickness: widget.ringThickness,
-                    knobRadius: widget.knobRadius,
-                    knobColor: widget.knobColor ?? Colors.white,
-                    knobShadows: widget.knobShadows ??
-                        [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: AnimatedBuilder(
+                animation: Listenable.merge(
+                    [_valueAnimationController, _sizeAnimation]),
+                builder: (context, child) {
+                  return LayoutBuilder(builder: (context, innerConstraints) {
+                    final minDimension = math.min(
+                        innerConstraints.maxWidth, innerConstraints.maxHeight);
+                    final denormalizedValue =
+                        _denormalizeValue(_valueAnimationController.value);
+                    return GestureDetector(
+                      onTap: () => _toggleEditMode(),
+                      child: Transform.scale(
+                        scale: _sizeAnimation.value,
+                        child: SizedBox(
+                          width: minDimension,
+                          height: minDimension,
+                          child: GestureDetector(
+                            onPanStart: _isEditing
+                                ? null
+                                : (d) {
+                                    setState(() => _isDragging = true);
+                                    widget.onChangeStart?.call();
+                                    _handlePanUpdate(d.localPosition,
+                                        Size(minDimension, minDimension));
+                                  },
+                            onPanUpdate: _isEditing
+                                ? null
+                                : (d) => _handlePanUpdate(d.localPosition,
+                                    Size(minDimension, minDimension)),
+                            onPanEnd: _isEditing
+                                ? null
+                                : (_) {
+                                    setState(() => _isDragging = false);
+                                    widget.onChangeEnd?.call();
+                                  },
+                            child: CustomPaint(
+                              size: Size(minDimension, minDimension),
+                              painter: _CircularSliderPainter(
+                                value: _valueAnimationController.value,
+                                gradientColors: widget.gradientColors,
+                                ringThickness: widget.ringThickness,
+                                knobRadius: widget.knobRadius,
+                                knobColor: widget.knobColor ?? Colors.white,
+                                knobShadows: widget.knobShadows,
+                                ringBackgroundColor:
+                                    widget.ringBackgroundColor ??
+                                        Colors.grey.withOpacity(0.2),
+                                labelText: widget.labelText,
+                                labelStyle: widget.labelStyle,
+                                // Pass inner label properties
+                                innerLabelText: widget.innerLabelText,
+                                innerLabelStyle: widget.innerLabelStyle,
+                              ),
+                              child: Center(
+                                  child:
+                                      _buildCenterContent(denormalizedValue)),
+                            ),
                           ),
-                        ],
-                    ringBackgroundColor:
-                        widget.ringBackgroundColor ?? Colors.grey.shade300,
-                    labelText: widget.labelText,
-                    labelStyle: widget.labelStyle ??
-                        const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2.0,
                         ),
-                  ),
-                  child: Center(
-                    child: _buildCenterText(animatedValue),
-                  ),
-                ),
-              );
-            },
-          ),
+                      ),
+                    );
+                  });
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildCustomInput(),
+          ],
         );
       },
     );
   }
 
-  Widget _buildCenterText(double value) {
-    final displayValue = value.toStringAsFixed(widget.decimalPrecision);
-    final fontSize = _calculateFontSize();
+  Widget _buildCenterContent(double value) {
+    /* ... Same as before ... */
+    return AnimatedOpacity(
+      opacity: _isEditing ? 0.0 : 1.0,
+      duration: const Duration(milliseconds: 200),
+      child: _buildCenterText(value),
+    );
+  }
 
+  Widget _buildCustomInput() {
+    /* ... Same as before ... */
+    return AnimatedOpacity(
+      opacity: _isEditing ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 300),
+      child: IgnorePointer(
+        ignoring: !_isEditing,
+        child: SizedBox(
+          width: 220,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                widget.prefix,
+                style: TextStyle(
+                  color: widget.textColor.withOpacity(0.7),
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: AutoSizeTextField(
+                  controller: _textController,
+                  focusNode: _focusNode,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: widget.textColor,
+                    fontSize: 50,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  minFontSize: 18,
+                  maxLines: 1,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  onSubmitted: (_) => _toggleEditMode(forceState: false),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCenterText(double value) {
+    /* ... Same as before ... */
+    final displayValue = value.toStringAsFixed(widget.decimalPrecision);
+    final fontSize = 48.0;
     return Padding(
-      padding: EdgeInsets.all(widget.ringThickness + widget.knobRadius + 20),
+      padding: EdgeInsets.all(widget.ringThickness + widget.knobRadius),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.baseline,
         textBaseline: TextBaseline.alphabetic,
-        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             widget.prefix,
@@ -327,23 +381,21 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
       ),
     );
   }
-
-  double _calculateFontSize() {
-    // Use a default font size - will be properly sized by AutoSizeText
-    return 48; // Base size, AutoSizeText will scale it down as needed
-  }
 }
 
 class _CircularSliderPainter extends CustomPainter {
-  final double value; // 0.0 to 1.0
+  final double value;
   final List<Color> gradientColors;
   final double ringThickness;
   final double knobRadius;
   final Color knobColor;
-  final List<BoxShadow> knobShadows;
+  final List<BoxShadow>? knobShadows;
   final Color ringBackgroundColor;
   final String? labelText;
-  final TextStyle labelStyle;
+  final TextStyle? labelStyle;
+  // Add inner label properties to painter
+  final String? innerLabelText;
+  final TextStyle? innerLabelStyle;
 
   _CircularSliderPainter({
     required this.value,
@@ -351,179 +403,210 @@ class _CircularSliderPainter extends CustomPainter {
     required this.ringThickness,
     required this.knobRadius,
     required this.knobColor,
-    required this.knobShadows,
+    this.knobShadows,
     required this.ringBackgroundColor,
     this.labelText,
-    required this.labelStyle,
+    this.labelStyle,
+    // Add to constructor
+    this.innerLabelText,
+    this.innerLabelStyle,
   });
+
+// NEW, FINAL, AND CORRECT paint() METHOD
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = math.min(size.width, size.height) / 2 - knobRadius;
 
-    // Draw background ring
+    // Draw the background ring
     final backgroundPaint = Paint()
       ..color = ringBackgroundColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = ringThickness
       ..strokeCap = StrokeCap.round;
-
     canvas.drawCircle(center, radius, backgroundPaint);
 
-    // Draw gradient ring
+    // --- Unified Gradient Definition ---
+    // Define the gradient and its rotation once. This ensures visual consistency.
     final rect = Rect.fromCircle(center: center, radius: radius);
+    final angleCorrection = math.atan((ringThickness / 2) / radius);
+    final gradientStartRotation = -math.pi / 2 - angleCorrection;
+    final gradientShader = SweepGradient(
+      colors: gradientColors,
+      startAngle: 0,
+      endAngle: 2 * math.pi,
+      transform: GradientRotation(gradientStartRotation),
+      tileMode: TileMode.clamp,
+    ).createShader(rect);
 
-    // Draw gradient arc only if value > 0
-    if (value > 0) {
-      // Create a gradient that maps to the actual drawn arc length
-      final List<Color> adjustedColors = [];
-      final List<double> adjustedStops = [];
+    // --- Conditional Painting Logic ---
 
-      // Calculate how to distribute the gradient across the arc
-      final colorCount = gradientColors.length;
-
-      // Add gradient colors distributed across the value range
-      for (int i = 0; i < colorCount; i++) {
-        final stop = i / (colorCount - 1) * value;
-        adjustedStops.add(stop);
-        adjustedColors.add(gradientColors[i]);
-      }
-
-      // Fill the rest with the last color to avoid gradient wrapping
-      if (value < 1.0) {
-        adjustedStops.add(value + 0.001);
-        adjustedColors.add(gradientColors.last);
-        adjustedStops.add(1.0);
-        adjustedColors.add(gradientColors.last);
-      }
-
-      final gradientPaint = Paint()
+    // Case 1: The slider is full (or extremely close).
+    if (value >= 0.999) {
+      final fullCirclePaint = Paint()
+        ..shader = gradientShader // Use the unified gradient
         ..style = PaintingStyle.stroke
         ..strokeWidth = ringThickness
-        ..strokeCap = StrokeCap.round
-        ..shader = SweepGradient(
-          colors: adjustedColors,
-          stops: adjustedStops,
-          startAngle: -math.pi / 2, // Start at top
-          endAngle: -math.pi / 2 +
-              (2 * math.pi), // Full circle for gradient calculation
-          tileMode: TileMode.clamp,
-        ).createShader(rect);
+        ..strokeCap =
+            StrokeCap.butt; // Use a butt cap to prevent overlap and seam
 
-      // Draw only the portion of the arc based on the value
-      canvas.drawArc(
-        rect,
-        -math.pi / 2, // Start at top
-        2 * math.pi * value, // Draw arc based on value (0 to 100%)
-        false,
-        gradientPaint,
-      );
+      // Draw a full circle. It's seamless by nature.
+      canvas.drawCircle(center, radius, fullCirclePaint);
+    }
+    // Case 2: The slider has a value but is not full.
+    else if (value > 0.001) {
+      final arcPaint = Paint()
+        ..shader = gradientShader // Use the same unified gradient
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = ringThickness
+        ..strokeCap = StrokeCap.round; // Use a round cap for the arc ends
+
+      // Draw the arc based on the value.
+      final sweepAngle = 2 * math.pi * value;
+      canvas.drawArc(rect, -math.pi / 2, sweepAngle, false, arcPaint);
     }
 
-    // Calculate knob position
-    // Start at top (-π/2) and move clockwise
-    // When value is 0, knob is at top. When value is 1 (100%), knob returns to top after full circle
-    final angle = -math.pi / 2 + (2 * math.pi * value);
-    final knobX = center.dx + radius * math.cos(angle);
-    final knobY = center.dy + radius * math.sin(angle);
-    final knobOffset = Offset(knobX, knobY);
+    // --- The rest of the paint method remains the same ---
 
-    // Draw knob shadows
-    for (final shadow in knobShadows) {
+    // Calculate and draw the knob
+    final angle = -math.pi / 2 + (2 * math.pi * value);
+    final knobOffset = Offset(
+      center.dx + radius * math.cos(angle),
+      center.dy + radius * math.sin(angle),
+    );
+    (knobShadows ??
+            [
+              BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 1))
+            ])
+        .forEach((shadow) {
       final shadowPaint = Paint()
         ..color = shadow.color
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, shadow.blurRadius);
-
-      canvas.drawCircle(
-        knobOffset + shadow.offset,
-        knobRadius,
-        shadowPaint,
-      );
-    }
-
-    // Draw knob
-    final knobPaint = Paint()
-      ..color = knobColor
-      ..style = PaintingStyle.fill;
-
+        ..maskFilter = MaskFilter.blur(BlurStyle.solid, shadow.blurRadius);
+      canvas.drawCircle(knobOffset + shadow.offset, knobRadius, shadowPaint);
+    });
+    final knobPaint = Paint()..color = knobColor;
     canvas.drawCircle(knobOffset, knobRadius, knobPaint);
 
-    // Draw knob border
-    final knobBorderPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.3)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-
-    canvas.drawCircle(knobOffset, knobRadius, knobBorderPaint);
-
-    // Draw circular arc label
+    // Call the drawing methods for both labels
     if (labelText != null && labelText!.isNotEmpty) {
       _drawCircularText(canvas, size, center, radius);
     }
+    if (innerLabelText != null && innerLabelText!.isNotEmpty) {
+      _drawInnerCircularText(canvas, size, center, radius);
+    }
   }
 
+  // Adaptive method for OUTER text
   void _drawCircularText(
       Canvas canvas, Size size, Offset center, double radius) {
-    // Calculate text arc parameters
-    final textRadius = radius - ringThickness - 25;
-    final textAngleStart = -math.pi * 0.7; // Start angle for text arc
-    final textAngleSpan = math.pi * 0.4; // Total span of text arc
-
-    // Split text into characters
+    final style = labelStyle ??
+        TextStyle(
+            color: Colors.grey.withOpacity(0.9),
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.5);
+    final textRadius = radius + ringThickness / 2 + 12;
     final chars = labelText!.split('');
-    final charCount = chars.length;
+    double totalArcWidth = 0;
+    final List<TextPainter> painters = [];
+    for (final char in chars) {
+      final painter = TextPainter(
+          text: TextSpan(text: char, style: style),
+          textDirection: TextDirection.ltr)
+        ..layout();
+      painters.add(painter);
+      totalArcWidth += painter.width;
+    }
+    final totalAngle = totalArcWidth / textRadius;
+    final startAngle = -math.pi / 2 - totalAngle / 2;
+    double currentAngle = startAngle;
+    for (final painter in painters) {
+      final charAngle = painter.width / textRadius;
+      final angleForCharCenter = currentAngle + charAngle / 2;
+      final position = Offset(
+          center.dx + textRadius * math.cos(angleForCharCenter),
+          center.dy + textRadius * math.sin(angleForCharCenter));
+      canvas.save();
+      canvas.translate(position.dx, position.dy);
+      canvas.rotate(angleForCharCenter + math.pi / 2);
+      painter.paint(canvas, Offset(-painter.width / 2, -painter.height / 2));
+      canvas.restore();
+      currentAngle += charAngle;
+    }
+  }
 
-    if (charCount == 0) return;
+  // NEW, CORRECTED METHOD (Inner Bottom, Readable and Facing Center)
+  void _drawInnerCircularText(
+      Canvas canvas, Size size, Offset center, double radius) {
+    // Use a default style if none is provided
+    final style = innerLabelStyle ??
+        TextStyle(
+          color: Colors.white.withOpacity(0.5),
+          fontSize: 10,
+          fontWeight: FontWeight.normal,
+          letterSpacing: 2, // Spacing for clarity
+        );
 
-    final anglePerChar = textAngleSpan / (charCount - 1);
+    // Position the text inside the main ring
+    final textRadius = radius - ringThickness;
 
-    canvas.save();
+    final chars = innerLabelText!.split('');
+    if (chars.isEmpty) return;
 
-    for (int i = 0; i < charCount; i++) {
-      final angle = textAngleStart + (anglePerChar * i);
+    // 1. Prepare painters for each character to calculate the total arc size.
+    final List<TextPainter> painters = [];
+    double totalArcWidth = 0;
+    for (final char in chars) {
+      final painter = TextPainter(
+          text: TextSpan(text: char, style: style),
+          textDirection: TextDirection.ltr)
+        ..layout();
+      painters.add(painter);
+      totalArcWidth += painter.width;
+    }
+    final totalAngle = totalArcWidth / textRadius;
 
-      final textPainter = TextPainter(
-        text: TextSpan(
-          text: chars[i],
-          style: labelStyle,
-        ),
-        textDirection: TextDirection.ltr,
+    // 2. Center the text block at the 6 o'clock position.
+    final startAngle = math.pi / 2 - totalAngle / 2;
+
+    // 3. Iterate through the painters IN REVERSE ORDER. This is the key to readability.
+    double currentAngle = startAngle;
+    for (final painter in painters.reversed) {
+      // Calculate the angle for the center of the current character.
+      final charAngle = painter.width / textRadius;
+      final angleForCharCenter = currentAngle + charAngle / 2;
+      final position = Offset(
+        center.dx + textRadius * math.cos(angleForCharCenter),
+        center.dy + textRadius * math.sin(angleForCharCenter),
       );
-
-      textPainter.layout();
 
       canvas.save();
+      canvas.translate(position.dx, position.dy);
 
-      // Calculate position for this character
-      final charX = center.dx + textRadius * math.cos(angle);
-      final charY = center.dy + textRadius * math.sin(angle);
+      // 4. Rotate the character so its "top" points towards the circle's center.
+      canvas.rotate(angleForCharCenter - math.pi / 2);
 
-      // Translate to character position
-      canvas.translate(charX, charY);
-
-      // Rotate to align with circle
-      canvas.rotate(angle + math.pi / 2);
-
-      // Draw character centered
-      textPainter.paint(
-        canvas,
-        Offset(-textPainter.width / 2, -textPainter.height / 2),
-      );
-
+      // 5. Paint the character, offsetting to center it correctly.
+      painter.paint(canvas, Offset(-painter.width / 2, -painter.height));
       canvas.restore();
-    }
 
-    canvas.restore();
+      // Move the angle cursor for the next character (which is the previous one in the string).
+      currentAngle += charAngle;
+    }
   }
 
   @override
-  bool shouldRepaint(_CircularSliderPainter oldDelegate) {
-    return oldDelegate.value != value ||
-        oldDelegate.gradientColors != gradientColors ||
-        oldDelegate.ringThickness != ringThickness ||
-        oldDelegate.knobRadius != knobRadius ||
-        oldDelegate.knobColor != knobColor ||
-        oldDelegate.labelText != labelText;
-  }
+  bool shouldRepaint(_CircularSliderPainter oldDelegate) =>
+      oldDelegate.value != value ||
+      oldDelegate.gradientColors != gradientColors ||
+      oldDelegate.ringThickness != ringThickness ||
+      oldDelegate.knobRadius != knobRadius ||
+      oldDelegate.knobColor != knobColor ||
+      oldDelegate.labelText != labelText ||
+      // Add repaint check for inner label
+      oldDelegate.innerLabelText != oldDelegate.innerLabelText;
 }
