@@ -1,11 +1,13 @@
 import 'dart:math' as math;
-import 'package:auto_size_text_field/auto_size_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
 /// A beautiful circular slider widget with gradient progress and an editable value.
 class GradientCircularSlider extends StatefulWidget {
+  /// Optional controller to programmatically control the slider (for example
+  /// to dismiss edit mode).
+  final GradientCircularSliderController? controller;
   final double minValue;
   final double maxValue;
   final double initialValue;
@@ -34,6 +36,7 @@ class GradientCircularSlider extends StatefulWidget {
 
   GradientCircularSlider({
     super.key,
+    this.controller,
     this.minValue = 0,
     this.maxValue = 100,
     required this.initialValue,
@@ -75,6 +78,27 @@ class GradientCircularSlider extends StatefulWidget {
   State<GradientCircularSlider> createState() => _GradientCircularSliderState();
 }
 
+/// Controller that can be used to programmatically control a
+/// [GradientCircularSlider]. Currently provides a `dismiss()` method which
+/// forces the slider out of edit mode if it is editing.
+class GradientCircularSliderController {
+  VoidCallback? _dismissCallback;
+
+  /// Force the slider to exit edit mode if it is currently in edit mode.
+  void dismiss() => _dismissCallback?.call();
+
+  // Internal API used by the widget to register/unregister the callback.
+  // These are intentionally not part of the public surface aside from the
+  // `dismiss` method.
+  void _bind(VoidCallback callback) {
+    _dismissCallback = callback;
+  }
+
+  void _unbind() {
+    _dismissCallback = null;
+  }
+}
+
 class _GradientCircularSliderState extends State<GradientCircularSlider>
     with TickerProviderStateMixin {
   late AnimationController _valueAnimationController;
@@ -92,6 +116,11 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
   @override
   void initState() {
     super.initState();
+    // If a controller is provided, bind its dismiss callback to the
+    // internal method that forces exit from edit mode.
+    widget.controller?._bind(() {
+      if (mounted) _toggleEditMode(forceState: false);
+    });
     _valueAnimationController = AnimationController(
       vsync: this,
       duration: widget.animationDuration,
@@ -126,6 +155,13 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
   @override
   void didUpdateWidget(GradientCircularSlider oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // Rebind controller if it changed.
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller?._unbind();
+      widget.controller?._bind(() {
+        if (mounted) _toggleEditMode(forceState: false);
+      });
+    }
     if (oldWidget.initialValue != widget.initialValue && !_isDragging) {
       _animateToValue(widget.initialValue);
     }
@@ -133,6 +169,8 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
 
   @override
   void dispose() {
+    // Unbind the controller callback to avoid retaining this State.
+    widget.controller?._unbind();
     _valueAnimationController.dispose();
     _sizeAnimationController.dispose();
     _knobScaleAnimationController?.dispose();

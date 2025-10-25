@@ -30,75 +30,89 @@ class DemoPage extends StatefulWidget {
 
 class _DemoPageState extends State<DemoPage> {
   double _currentValue = 70324.34;
+  final GradientCircularSliderController _controller =
+      GradientCircularSliderController();
+  // (global key removed — no longer needed with GestureDetector/unfocus approach)
 
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[900],
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(height: 30),
-            SizedBox(
-              height: 250,
-              child: GradientCircularSlider(
-                minValue: 0,
-                enableHaptics: false,
-                maxValue: 70324.34,
-                initialValue: _currentValue,
-                gradientColors: const [
-                  Color(0xFFFFD700),
-                  Color(0xFFFF6B6B),
-                  Color(0xFF4ECDC4),
-                ],
-                // Outer label (at the top)
-                labelText: "TAP TO ENTER AMOUNT VALUE",
-                labelStyle: TextStyle(
-                  color: Colors.amber.withOpacity(0.6),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 2,
-                ),
-                // NEW: Inner label (at the bottom)
-                innerLabelText: "DRAG OR TAP TO EDIT",
-                innerLabelStyle: TextStyle(
-                  color: Colors.white.withOpacity(0.5),
-                  fontSize: 10,
-                  fontWeight: FontWeight.normal,
-                  letterSpacing: 2.5,
-                ),
-                prefix: "₹",
-                prefixScale: 0.7,
-                decimalPrecision: 2,
-                ringThickness: 27,
-                knobRadius: 16,
-                textColor: Colors.amber,
-                ringBackgroundColor: Colors.grey.shade800,
-                knobColor: Colors.amber,
-                knobShadows: const [
-                  BoxShadow(
-                    color: Color.fromARGB(112, 0, 0, 0),
-                    blurRadius: 5,
-                    spreadRadius: 3,
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () {
+          // A simple, reliable approach: unfocus the current focus node which
+          // causes the slider to exit edit mode (the widget listens to focus
+          // loss). This avoids low-level pointer math and should be sufficient
+          // for most apps. If you prefer a modal barrier approach, we can
+          // implement that instead.
+          FocusScope.of(context).unfocus();
+        },
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 30),
+              SizedBox(
+                height: 250,
+                child: GradientCircularSlider(
+                  controller: _controller,
+                  minValue: 0,
+                  enableHaptics: false,
+                  maxValue: 70324.34,
+                  initialValue: _currentValue,
+                  gradientColors: const [
+                    Color(0xFFFFD700),
+                    Color(0xFFFF6B6B),
+                    Color(0xFF4ECDC4),
+                  ],
+                  // Outer label (at the top)
+                  labelText: "TAP TO ENTER AMOUNT VALUE",
+                  labelStyle: TextStyle(
+                    color: Colors.amber.withOpacity(0.6),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 2,
                   ),
-                ],
-                onChanged: (val) {
-                  setState(() {
-                    _currentValue = val;
-                  });
-                },
+                  // NEW: Inner label (at the bottom)
+                  innerLabelText: "DRAG OR TAP TO EDIT",
+                  innerLabelStyle: TextStyle(
+                    color: Colors.white.withOpacity(0.5),
+                    fontSize: 10,
+                    fontWeight: FontWeight.normal,
+                    letterSpacing: 2.5,
+                  ),
+                  prefix: "₹",
+                  prefixScale: 0.7,
+                  decimalPrecision: 2,
+                  ringThickness: 27,
+                  knobRadius: 16,
+                  textColor: Colors.amber,
+                  ringBackgroundColor: Colors.grey.shade800,
+                  knobColor: Colors.amber,
+                  knobShadows: const [
+                    BoxShadow(
+                      color: Color.fromARGB(112, 0, 0, 0),
+                      blurRadius: 5,
+                      spreadRadius: 3,
+                    ),
+                  ],
+                  onChanged: (val) {
+                    setState(() {
+                      _currentValue = val;
+                    });
+                  },
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Value: ₹${_currentValue.toStringAsFixed(2)}',
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 18,
+              const SizedBox(height: 20),
+              Text(
+                'Value: ₹${_currentValue.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 18,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
