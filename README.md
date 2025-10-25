@@ -7,14 +7,15 @@ A beautiful and customizable circular slider widget with gradient progress for F
 
 ## Features
 
-✨ **Beautiful Gradient Progress** - Smooth color transitions with customizable gradient colors
-🎯 **Draggable Knob** - Interactive knob with shadow/glow effects that follows the circular path
-📝 **Auto-Sizing Text** - Smart text sizing that fits perfectly within the circle
-🎨 **Customizable Prefix** - Add currency symbols, percentages, or any prefix with scaling
-🔤 **Circular Arc Labels** - Optional curved text labels following the circle's arc
-📳 **Haptic Feedback** - Tactile feedback during interaction (configurable)
-🎭 **Smooth Animations** - Animated transitions for programmatic value changes
-🎨 **Fully Customizable** - Colors, sizes, styles, and behaviors are all configurable
+✨ **Beautiful Gradient Progress** - Smooth color transitions with customizable gradients  
+🎯 **Draggable Knob** - Interactive knob with shadow/glow effects that follows the circular path  
+⌨️ **Tap-to-Edit Input** - Tap the center text to type an exact value with validation and clamping  
+🧭 **Controller Support** - Use `GradientCircularSliderController` to dismiss edit mode programmatically  
+🔤 **Dual Arc Labels** - Optional outer and inner curved labels that hug the ring perfectly  
+📳 **Haptic Feedback** - Tactile feedback during interaction (configurable)  
+🌀 **Initial Sweep Animation** - Optionally animate the first sweep after layout for delight  
+🎭 **Smart Size/Position Animation** - Widget lifts toward the top and eases out while editing  
+🎨 **Fully Customizable** - Colors, sizes, styles, shadows, and behaviors are all configurable
 
 ## Installation
 
@@ -52,60 +53,99 @@ GradientCircularSlider(
 ### Advanced Example with Custom Styling
 
 ```dart
+final sliderController = GradientCircularSliderController();
+
 GradientCircularSlider(
+  controller: sliderController,
   minValue: 0,
-  maxValue: 100000,
-  initialValue: 24343.43,
-  gradientColors: [Color(0xFF00A8E8), Color(0xFF00FF7F)],
-  labelText: "ADJUST AMOUNT",
-  prefix: "\$",
-  prefixScale: 0.6,
-  ringThickness: 25,
-  knobRadius: 18,
-  textColor: Colors.white,
+  maxValue: 101.99,
+  initialValue: 101.34,
+  gradientColors: const [
+    Color(0xFFFFD700),
+    Color(0xFFFF6B6B),
+    Color(0xFF4ECDC4),
+  ],
+  initialSweepAnimationDuration: const Duration(milliseconds: 500),
+  labelText: "TAP TO ENTER AMOUNT VALUE",
+  labelStyle: TextStyle(
+    color: Colors.amber.withAlpha(153),
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 2,
+  ),
+  innerLabelText: "DRAG OR TAP TO EDIT",
+  innerLabelStyle: TextStyle(
+    color: Colors.white.withAlpha(128),
+    fontSize: 10,
+    fontWeight: FontWeight.normal,
+    letterSpacing: 2.5,
+  ),
+  prefix: "₹",
+  prefixScale: 0.5,
+  decimalPrecision: 2,
+  ringThickness: 27,
+  knobRadius: 16,
+  textColor: Colors.amber,
   ringBackgroundColor: Colors.grey.shade800,
-  knobShadows: [
+  knobColor: Colors.amber,
+  enableHaptics: false,
+  knobShadows: const [
     BoxShadow(
-      color: Colors.blue,
-      blurRadius: 12,
-      spreadRadius: 2,
+      color: Color.fromARGB(112, 0, 0, 0),
+      blurRadius: 5,
+      spreadRadius: 3,
     ),
   ],
-  labelStyle: TextStyle(
-    color: Colors.grey,
-    fontSize: 14,
-    fontWeight: FontWeight.bold,
-    letterSpacing: 2.0,
-  ),
-  enableHaptics: true,
-  onChanged: (val) => print("Value: $val"),
-  onChangeStart: () => print("Started dragging"),
-  onChangeEnd: () => print("Stopped dragging"),
+  onChanged: (val) => debugPrint("Value: $val"),
+  onChangeStart: () => debugPrint("Started dragging"),
+  onChangeEnd: () => debugPrint("Stopped dragging"),
 )
+```
+
+### Edit Mode & Controller
+
+Tap the value inside the ring to enter edit mode. The circle scales up, slides toward the top, and the numeric text field becomes interactive (with optional prefixes, decimals, and validation).  
+Use the optional `GradientCircularSliderController` to dismiss edit mode programmatically (for example when navigating away or tapping outside the widget).
+
+```dart
+final sliderController = GradientCircularSliderController();
+
+GradientCircularSlider(
+  controller: sliderController,
+  initialValue: 42,
+  // ...other options
+);
+
+// Dismiss edit mode from anywhere in your widget tree
+sliderController.dismiss();
 ```
 
 ## Customization Options
 
 | Parameter | Type | Description | Default |
 |-----------|------|-------------|---------|
-| `minValue` | `double` | Minimum slider value | 0 |
-| `maxValue` | `double` | Maximum slider value | 100 |
-| `initialValue` | `double` | Starting value (required) | - |
-| `gradientColors` | `List<Color>` | Colors for the circular gradient (min 2) | `[Colors.blue, Colors.green]` |
-| `ringThickness` | `double` | Width of the circular ring | 20.0 |
-| `prefix` | `String` | Symbol before the value (e.g., '$', '₹', '%') | '$' |
-| `prefixScale` | `double` | Ratio of prefix font size to main font (0-1) | 0.6 |
-| `labelText` | `String?` | Text shown on the top arc | null |
-| `enableHaptics` | `bool` | Enable tactile feedback | true |
-| `textColor` | `Color` | Color for central text | Colors.white |
-| `labelStyle` | `TextStyle?` | Custom style for arc label | null |
-| `decimalPrecision` | `int` | Number of decimal places | 2 |
-| `knobRadius` | `double` | Size of the draggable knob | 15 |
-| `knobColor` | `Color?` | Color of the knob | Colors.white |
-| `knobShadows` | `List<BoxShadow>?` | Shadow effects for the knob | Default shadow |
-| `ringBackgroundColor` | `Color?` | Background color of the ring | Colors.grey.shade300 |
-| `animationDuration` | `Duration` | Duration for value animations | 300ms |
-| `animationCurve` | `Curve` | Animation curve for transitions | Curves.easeInOut |
+| `controller` | `GradientCircularSliderController?` | Provides `dismiss()` to exit edit mode programmatically | `null` |
+| `minValue` | `double` | Minimum slider value | `0` |
+| `maxValue` | `double` | Maximum slider value | `120` |
+| `initialValue` | `double` | Starting value inside the ring (required) | — |
+| `initialSweepAnimationDuration` | `Duration` | Adds a delayed sweep animation after layout | `Duration.zero` |
+| `gradientColors` | `List<Color>` | Colors for the circular gradient (min 2) | `[Colors.lightBlueAccent, Colors.blue]` |
+| `ringThickness` | `double` | Width of the circular ring | `20.0` |
+| `ringBackgroundColor` | `Color?` | Background/track color of the ring | `Colors.grey.withAlpha(51)` |
+| `prefix` | `String` | Symbol before the value (e.g. `$`, `₹`, `%`) | `'$'` |
+| `prefixScale` | `double` | Ratio of prefix font size to value font (0–1) | `0.6` |
+| `textColor` | `Color` | Color for the center value while not editing | `Colors.white` |
+| `decimalPrecision` | `int` | Digits after the decimal point | `2` |
+| `labelText` | `String?` | Optional curved label along the top of the ring | `null` |
+| `labelStyle` | `TextStyle?` | Style for the outer curved label | `null` |
+| `innerLabelText` | `String?` | Optional curved label along the inner ring | `null` |
+| `innerLabelStyle` | `TextStyle?` | Style for the inner curved label | `null` |
+| `enableHaptics` | `bool` | Enables light/medium haptic feedback while dragging | `true` |
+| `knobRadius` | `double` | Size of the draggable knob | `15` |
+| `knobColor` | `Color?` | Color of the knob fill | `Colors.white` |
+| `knobShadows` | `List<BoxShadow>?` | Custom drop shadows for the knob | Gentle default glow |
+| `animationDuration` | `Duration` | Duration for value interpolation when animating | `500ms` |
+| `animationCurve` | `Curve` | Curve for value interpolation | `Curves.easeInOut` |
 
 ## Callbacks
 
