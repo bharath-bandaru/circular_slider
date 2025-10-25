@@ -27,7 +27,7 @@ Add `gradient_circular_slider` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  gradient_circular_slider: ^1.0.2
+  gradient_circular_slider: ^1.0.3
 ```
 
 Then run:

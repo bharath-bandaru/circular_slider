@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3 - Improve Documentation Coverage
+
+- Updated License
+
 ## 1.0.2 - Improve Documentation Coverage
 
 - Added detailed dartdoc comments for all primary public parameters and callbacks.
