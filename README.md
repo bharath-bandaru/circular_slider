@@ -1,7 +1,7 @@
 # Gradient Circular Slider
 
 [![pub package](https://img.shields.io/pub/v/gradient_circular_slider.svg)](https://pub.dev/packages/gradient_circular_slider)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: BSD 3-Clause](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/bharath-bandaru/circular_slider/blob/main/LICENSE)
 
 A beautiful and customizable circular slider widget with gradient progress for Flutter applications. Perfect for creating intuitive and visually appealing value selectors with smooth animations and haptic feedback.
 
