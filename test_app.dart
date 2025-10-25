@@ -59,7 +59,7 @@ class _TestPageState extends State<TestPage> {
                   setState(() {
                     _value = val;
                   });
-                  print('Value: ${val.toStringAsFixed(1)}%');
+                  debugPrint('Value: ${val.toStringAsFixed(1)}%');
                 },
               ),
             ),

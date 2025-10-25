@@ -29,11 +29,12 @@ class DemoPage extends StatefulWidget {
 }
 
 class _DemoPageState extends State<DemoPage> {
-  double _currentValue = 70324.34;
+  double _currentValue = 70324542.34;
   final GradientCircularSliderController _controller =
       GradientCircularSliderController();
   // (global key removed — no longer needed with GestureDetector/unfocus approach)
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[900],
@@ -58,7 +59,9 @@ class _DemoPageState extends State<DemoPage> {
                   controller: _controller,
                   minValue: 0,
                   enableHaptics: false,
-                  maxValue: 70324.34,
+                  initialSweepAnimationDuration:
+                      const Duration(milliseconds: 500),
+                  maxValue: 703242323.34,
                   initialValue: _currentValue,
                   gradientColors: const [
                     Color(0xFFFFD700),
@@ -68,7 +71,7 @@ class _DemoPageState extends State<DemoPage> {
                   // Outer label (at the top)
                   labelText: "TAP TO ENTER AMOUNT VALUE",
                   labelStyle: TextStyle(
-                    color: Colors.amber.withOpacity(0.6),
+                    color: Colors.amber.withAlpha(153),
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 2,
@@ -76,13 +79,13 @@ class _DemoPageState extends State<DemoPage> {
                   // NEW: Inner label (at the bottom)
                   innerLabelText: "DRAG OR TAP TO EDIT",
                   innerLabelStyle: TextStyle(
-                    color: Colors.white.withOpacity(0.5),
+                    color: Colors.white.withAlpha(128),
                     fontSize: 10,
                     fontWeight: FontWeight.normal,
                     letterSpacing: 2.5,
                   ),
                   prefix: "₹",
-                  prefixScale: 0.7,
+                  prefixScale: 0.5,
                   decimalPrecision: 2,
                   ringThickness: 27,
                   knobRadius: 16,

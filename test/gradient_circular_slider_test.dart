@@ -5,7 +5,8 @@ import 'package:auto_size_text/auto_size_text.dart';
 
 void main() {
   group('GradientCircularSlider', () {
-    testWidgets('creates widget with required parameters', (WidgetTester tester) async {
+    testWidgets('creates widget with required parameters',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -19,7 +20,8 @@ void main() {
       expect(find.byType(GradientCircularSlider), findsOneWidget);
     });
 
-    testWidgets('displays initial value correctly', (WidgetTester tester) async {
+    testWidgets('displays initial value correctly',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -35,7 +37,8 @@ void main() {
       expect(find.text(r'$'), findsOneWidget);
     });
 
-    testWidgets('displays custom prefix correctly', (WidgetTester tester) async {
+    testWidgets('displays custom prefix correctly',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -52,7 +55,8 @@ void main() {
       expect(find.text('%'), findsOneWidget);
     });
 
-    testWidgets('displays label text when provided', (WidgetTester tester) async {
+    testWidgets('displays label text when provided',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -90,7 +94,8 @@ void main() {
       expect(find.text('50.00'), findsOneWidget);
     });
 
-    testWidgets('calls onChanged callback when dragged', (WidgetTester tester) async {
+    testWidgets('calls onChanged callback when dragged',
+        (WidgetTester tester) async {
       double? changedValue;
 
       await tester.pumpWidget(
@@ -120,7 +125,8 @@ void main() {
       expect(changedValue, isNotNull);
     });
 
-    testWidgets('calls onChangeStart and onChangeEnd callbacks', (WidgetTester tester) async {
+    testWidgets('calls onChangeStart and onChangeEnd callbacks',
+        (WidgetTester tester) async {
       bool startCalled = false;
       bool endCalled = false;
 
@@ -156,7 +162,8 @@ void main() {
       expect(endCalled, isTrue);
     });
 
-    testWidgets('respects decimal precision setting', (WidgetTester tester) async {
+    testWidgets('respects decimal precision setting',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -198,13 +205,14 @@ void main() {
       expect(richText, isNotNull);
     });
 
-    testWidgets('accepts multiple gradient colors', (WidgetTester tester) async {
+    testWidgets('accepts multiple gradient colors',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: GradientCircularSlider(
               initialValue: 50,
-              gradientColors: [Colors.red, Colors.blue, Colors.green],
+              gradientColors: const [Colors.red, Colors.blue, Colors.green],
             ),
           ),
         ),
@@ -213,7 +221,8 @@ void main() {
       expect(find.byType(GradientCircularSlider), findsOneWidget);
     });
 
-    testWidgets('handles empty label text gracefully', (WidgetTester tester) async {
+    testWidgets('handles empty label text gracefully',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -258,7 +267,8 @@ void main() {
       expect(find.byType(GradientCircularSlider), findsOneWidget);
     });
 
-    testWidgets('handles Indian Rupee symbol correctly', (WidgetTester tester) async {
+    testWidgets('handles Indian Rupee symbol correctly',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -280,7 +290,7 @@ void main() {
           home: Scaffold(
             body: GradientCircularSlider(
               initialValue: 0,
-              animationDuration: Duration(milliseconds: 300),
+              animationDuration: const Duration(milliseconds: 300),
             ),
           ),
         ),
@@ -294,7 +304,7 @@ void main() {
           home: Scaffold(
             body: GradientCircularSlider(
               initialValue: 100,
-              animationDuration: Duration(milliseconds: 300),
+              animationDuration: const Duration(milliseconds: 300),
             ),
           ),
         ),
@@ -337,7 +347,8 @@ void main() {
       expect(find.byType(GradientCircularSlider), findsNWidgets(2));
     });
 
-    testWidgets('prefix scale affects prefix size', (WidgetTester tester) async {
+    testWidgets('prefix scale affects prefix size',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
