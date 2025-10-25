@@ -49,7 +49,7 @@ class _DemoPageState extends State<DemoPage> {
             ),
             const SizedBox(height: 30),
             SizedBox(
-              height: 350,
+              height: 250,
               child: GradientCircularSlider(
                 minValue: 0,
                 maxValue: 70,
@@ -85,7 +85,7 @@ class _DemoPageState extends State<DemoPage> {
                 knobColor: Colors.amber,
                 knobShadows: const [
                   BoxShadow(
-                    color: Color.fromARGB(113, 255, 255, 255),
+                    color: Color.fromARGB(112, 0, 0, 0),
                     blurRadius: 5,
                     spreadRadius: 3,
                   ),

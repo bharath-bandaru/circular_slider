@@ -85,6 +85,7 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
   final TextEditingController _textController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   bool _isUpdatingTextProgrammatically = false;
+  double _minDimension = 0.0;
 
   @override
   void initState() {
@@ -204,82 +205,99 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
     widget.onChanged?.call(denormalizedValue);
   }
 
+// NEW, FINAL, AND CORRECT build() METHOD
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Flexible(
-              child: AnimatedBuilder(
+        _minDimension = math.min(constraints.maxWidth, constraints.maxHeight);
+
+        return SizedBox(
+          width: _minDimension,
+          height: _minDimension,
+          child: Stack(
+            // The Stack will contain both the circle and the text field
+            children: [
+              // Child 1: The animated circular slider.
+              AnimatedBuilder(
                 animation: Listenable.merge(
-                    [_valueAnimationController, _sizeAnimation]),
+                    [_valueAnimationController, _sizeAnimationController]),
                 builder: (context, child) {
-                  return LayoutBuilder(builder: (context, innerConstraints) {
-                    final minDimension = math.min(
-                        innerConstraints.maxWidth, innerConstraints.maxHeight);
-                    final denormalizedValue =
-                        _denormalizeValue(_valueAnimationController.value);
-                    return GestureDetector(
-                      onTap: () => _toggleEditMode(),
-                      child: Transform.scale(
-                        scale: _sizeAnimation.value,
-                        child: SizedBox(
-                          width: minDimension,
-                          height: minDimension,
-                          child: GestureDetector(
-                            onPanStart: _isEditing
-                                ? null
-                                : (d) {
-                                    setState(() => _isDragging = true);
-                                    widget.onChangeStart?.call();
-                                    _handlePanUpdate(d.localPosition,
-                                        Size(minDimension, minDimension));
-                                  },
-                            onPanUpdate: _isEditing
-                                ? null
-                                : (d) => _handlePanUpdate(d.localPosition,
-                                    Size(minDimension, minDimension)),
-                            onPanEnd: _isEditing
-                                ? null
-                                : (_) {
-                                    setState(() => _isDragging = false);
-                                    widget.onChangeEnd?.call();
-                                  },
-                            child: CustomPaint(
-                              size: Size(minDimension, minDimension),
-                              painter: _CircularSliderPainter(
-                                value: _valueAnimationController.value,
-                                gradientColors: widget.gradientColors,
-                                ringThickness: widget.ringThickness,
-                                knobRadius: widget.knobRadius,
-                                knobColor: widget.knobColor ?? Colors.white,
-                                knobShadows: widget.knobShadows,
-                                ringBackgroundColor:
-                                    widget.ringBackgroundColor ??
-                                        Colors.grey.withOpacity(0.2),
-                                labelText: widget.labelText,
-                                labelStyle: widget.labelStyle,
-                                // Pass inner label properties
-                                innerLabelText: widget.innerLabelText,
-                                innerLabelStyle: widget.innerLabelStyle,
-                              ),
-                              child: Center(
-                                  child:
-                                      _buildCenterContent(denormalizedValue)),
+                  final denormalizedValue =
+                      _denormalizeValue(_valueAnimationController.value);
+
+                  // This animates the alignment of the circle.
+                  // When not editing, it's at the center.
+                  // When editing, it moves to the TOP of the Stack.
+                  final alignment = Alignment.lerp(
+                    Alignment.center, // Start position
+                    Alignment.topCenter, // End position
+                    _sizeAnimationController.value,
+                  )!;
+
+                  return Align(
+                    alignment: alignment,
+                    child: Transform.scale(
+                      scale: _sizeAnimation.value,
+                      child: SizedBox(
+                        width: _minDimension,
+                        height: _minDimension,
+                        child: GestureDetector(
+                          onTap: () => _toggleEditMode(),
+                          onPanStart: _isEditing
+                              ? null
+                              : (d) {
+                                  setState(() => _isDragging = true);
+                                  widget.onChangeStart?.call();
+                                  _handlePanUpdate(d.localPosition,
+                                      Size(_minDimension, _minDimension));
+                                },
+                          onPanUpdate: _isEditing
+                              ? null
+                              : (d) => _handlePanUpdate(d.localPosition,
+                                  Size(_minDimension, _minDimension)),
+                          onPanEnd: _isEditing
+                              ? null
+                              : (_) {
+                                  setState(() => _isDragging = false);
+                                  widget.onChangeEnd?.call();
+                                },
+                          child: CustomPaint(
+                            size: Size(_minDimension, _minDimension),
+                            painter: _CircularSliderPainter(
+                              value: _valueAnimationController.value,
+                              gradientColors: widget.gradientColors,
+                              ringThickness: widget.ringThickness,
+                              knobRadius: widget.knobRadius,
+                              isEditing: _isEditing,
+                              knobColor: widget.knobColor ?? Colors.white,
+                              knobShadows: widget.knobShadows,
+                              ringBackgroundColor: widget.ringBackgroundColor ??
+                                  Colors.grey.withOpacity(0.2),
+                              labelText: widget.labelText,
+                              labelStyle: widget.labelStyle,
+                              innerLabelText: widget.innerLabelText,
+                              innerLabelStyle: widget.innerLabelStyle,
                             ),
+                            child: Center(
+                                child: _buildCenterContent(denormalizedValue)),
                           ),
                         ),
                       ),
-                    );
-                  });
+                    ),
+                  );
                 },
               ),
-            ),
-            const SizedBox(height: 20),
-            _buildCustomInput(),
-          ],
+
+              // Child 2: The text input field.
+              // This is permanently aligned to the BOTTOM of the Stack.
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: _buildCustomInput(),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -294,52 +312,58 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
     );
   }
 
+// UPDATED _buildCustomInput() METHOD for Bottom Alignment
+
   Widget _buildCustomInput() {
-    /* ... Same as before ... */
     return AnimatedOpacity(
       opacity: _isEditing ? 1.0 : 0.0,
       duration: const Duration(milliseconds: 300),
       child: IgnorePointer(
         ignoring: !_isEditing,
-        child: SizedBox(
-          width: 220,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                widget.prefix,
-                style: TextStyle(
-                  color: widget.textColor.withOpacity(0.7),
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: AutoSizeTextField(
-                  controller: _textController,
-                  focusNode: _focusNode,
-                  textAlign: TextAlign.center,
+        child: Padding(
+          // Add padding to the BOTTOM so it doesn't sit on the absolute edge.
+          padding: EdgeInsets.only(
+              bottom: _minDimension * 0.03), // 3% proportional padding
+          child: SizedBox(
+            width: _minDimension * 0.5, // Proportional width
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(
+                  widget.prefix,
                   style: TextStyle(
-                    color: widget.textColor,
-                    fontSize: 50,
+                    color: widget.textColor.withOpacity(0.7),
+                    fontSize: 30,
                     fontWeight: FontWeight.bold,
                   ),
-                  minFontSize: 18,
-                  maxLines: 1,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  onSubmitted: (_) => _toggleEditMode(forceState: false),
                 ),
-              ),
-            ],
+                const SizedBox(width: 4),
+                Expanded(
+                  child: AutoSizeTextField(
+                    controller: _textController,
+                    focusNode: _focusNode,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: widget.textColor,
+                      fontSize: 50,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    minFontSize: 18,
+                    maxLines: 1,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    onSubmitted: (_) => _toggleEditMode(forceState: false),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -396,6 +420,7 @@ class _CircularSliderPainter extends CustomPainter {
   // Add inner label properties to painter
   final String? innerLabelText;
   final TextStyle? innerLabelStyle;
+  final bool? isEditing;
 
   _CircularSliderPainter({
     required this.value,
@@ -406,6 +431,7 @@ class _CircularSliderPainter extends CustomPainter {
     this.knobShadows,
     required this.ringBackgroundColor,
     this.labelText,
+    this.isEditing,
     this.labelStyle,
     // Add to constructor
     this.innerLabelText,
@@ -492,10 +518,10 @@ class _CircularSliderPainter extends CustomPainter {
     canvas.drawCircle(knobOffset, knobRadius, knobPaint);
 
     // Call the drawing methods for both labels
-    if (labelText != null && labelText!.isNotEmpty) {
+    if (labelText != null && labelText!.isNotEmpty && !isEditing!) {
       _drawCircularText(canvas, size, center, radius);
     }
-    if (innerLabelText != null && innerLabelText!.isNotEmpty) {
+    if (innerLabelText != null && innerLabelText!.isNotEmpty && !isEditing!) {
       _drawInnerCircularText(canvas, size, center, radius);
     }
   }
@@ -608,5 +634,6 @@ class _CircularSliderPainter extends CustomPainter {
       oldDelegate.knobColor != knobColor ||
       oldDelegate.labelText != labelText ||
       // Add repaint check for inner label
-      oldDelegate.innerLabelText != oldDelegate.innerLabelText;
+      oldDelegate.innerLabelText != oldDelegate.innerLabelText ||
+      oldDelegate.isEditing != isEditing;
 }
