@@ -29,7 +29,7 @@ class DemoPage extends StatefulWidget {
 }
 
 class _DemoPageState extends State<DemoPage> {
-  double _currentValue = 50;
+  double _currentValue = 70324.34;
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +52,7 @@ class _DemoPageState extends State<DemoPage> {
               height: 250,
               child: GradientCircularSlider(
                 minValue: 0,
-                maxValue: 70,
+                maxValue: 70324.34,
                 initialValue: _currentValue,
                 gradientColors: const [
                   Color(0xFFFFD700),
@@ -77,7 +77,7 @@ class _DemoPageState extends State<DemoPage> {
                 ),
                 prefix: "₹",
                 prefixScale: 0.7,
-                decimalPrecision: 0,
+                decimalPrecision: 2,
                 ringThickness: 32,
                 knobRadius: 24,
                 textColor: Colors.amber,
@@ -99,7 +99,7 @@ class _DemoPageState extends State<DemoPage> {
             ),
             const SizedBox(height: 20),
             Text(
-              'Value: ₹${_currentValue.toStringAsFixed(0)}',
+              'Value: ₹${_currentValue.toStringAsFixed(2)}',
               style: const TextStyle(
                 color: Colors.white70,
                 fontSize: 18,

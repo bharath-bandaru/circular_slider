@@ -143,12 +143,7 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
     if (newValue != null) {
       final clampedValue = newValue.clamp(widget.minValue, widget.maxValue);
       final normalizedValue = _normalizeValue(clampedValue);
-      _valueAnimationController.animateTo(
-        normalizedValue,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-      );
-      widget.onChanged?.call(clampedValue);
+      _valueAnimationController.value = normalizedValue;
     }
   }
 
@@ -176,6 +171,7 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
         final enteredValue = double.tryParse(_textController.text) ??
             _denormalizeValue(_valueAnimationController.value);
         _animateToValue(enteredValue);
+        widget.onChanged?.call(enteredValue);
       }
     });
   }
