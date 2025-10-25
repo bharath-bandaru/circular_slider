@@ -1,4 +1,4 @@
-name: circular_slider
+name: gradient_circular_slider
 description: A beautiful and customizable circular slider widget with gradient progress, draggable knob, auto-fitting text display, and circular arc labels for Flutter apps.
 version: 1.0.0
 homepage: https://github.com/bharath-bandaru/circular_slider
