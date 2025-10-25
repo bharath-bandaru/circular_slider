@@ -5,6 +5,10 @@
 
 A beautiful and customizable circular slider widget with gradient progress for Flutter applications. Perfect for creating intuitive and visually appealing value selectors with smooth animations and haptic feedback.
 
+## Screeshot
+
+![Screenshot of Gradient Circular Slider](./image.png)
+
 ## Features
 
 ✨ **Beautiful Gradient Progress** - Smooth color transitions with customizable gradients  
@@ -219,7 +223,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Author
 
-Created with ❤️ by Your Name
+Created with ❤️ by Bharath Bandaru
 
 ## Support
 
