@@ -39,19 +39,12 @@ class _DemoPageState extends State<DemoPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              'Custom Styled Slider',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
             const SizedBox(height: 30),
             SizedBox(
               height: 250,
               child: GradientCircularSlider(
                 minValue: 0,
+                enableHaptics: false,
                 maxValue: 70324.34,
                 initialValue: _currentValue,
                 gradientColors: const [
@@ -78,8 +71,8 @@ class _DemoPageState extends State<DemoPage> {
                 prefix: "₹",
                 prefixScale: 0.7,
                 decimalPrecision: 2,
-                ringThickness: 32,
-                knobRadius: 24,
+                ringThickness: 27,
+                knobRadius: 16,
                 textColor: Colors.amber,
                 ringBackgroundColor: Colors.grey.shade800,
                 knobColor: Colors.amber,
