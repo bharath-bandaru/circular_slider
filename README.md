@@ -7,7 +7,7 @@ A beautiful and customizable circular slider widget with gradient progress for F
 
 ## Screeshot
 
-![Screenshot of Gradient Circular Slider](./image.png)
+<img src="./image.png" alt="Screenshot of Gradient Circular Slider" width="360" />
 
 ## Features
 
