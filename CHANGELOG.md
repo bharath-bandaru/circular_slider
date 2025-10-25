@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.2 - Improve Documentation Coverage
+
+- Added detailed dartdoc comments for all primary public parameters and callbacks.
+- Updated README installation instructions to reference the latest published version.
+
+## 1.0.1 - Polish and Metadata Updates
+
+- Tweaked package metadata and README details based on initial feedback.
+
 ## 1.0.0 - Initial Release
 
 ### Features

@@ -8,32 +8,80 @@ class GradientCircularSlider extends StatefulWidget {
   /// Optional controller to programmatically control the slider (for example
   /// to dismiss edit mode).
   final GradientCircularSliderController? controller;
+
+  /// Minimum value representable by the slider.
   final double minValue;
+
+  /// Maximum value representable by the slider.
   final double maxValue;
+
+  /// Initial numeric value displayed when the widget builds.
   final double initialValue;
+
+  /// Colors used to paint the progress arc gradient (at least two).
   final List<Color> gradientColors;
+
+  /// Thickness of the circular ring in logical pixels.
   final double ringThickness;
+
+  /// Optional prefix (such as a currency symbol) rendered before the value.
   final String prefix;
+
+  /// Scale factor applied to the prefix text relative to the main value.
   final double prefixScale;
+
+  /// Duration of the one-time sweep animation executed after build.
   final Duration initialSweepAnimationDuration;
+
+  /// Whether to trigger haptic feedback when the user drags the knob.
   final bool enableHaptics;
+
+  /// Color for the main numeric text displayed in the center.
   final Color textColor;
+
+  /// Number of decimal places rendered for the current value.
   final int decimalPrecision;
+
+  /// Callback invoked whenever the slider's value changes due to user input.
   final ValueChanged<double>? onChanged;
+
+  /// Callback fired when the user starts dragging the knob.
   final VoidCallback? onChangeStart;
+
+  /// Callback fired when the user stops dragging the knob.
   final VoidCallback? onChangeEnd;
+
+  /// Shadows drawn behind the knob for depth.
   final List<BoxShadow>? knobShadows;
+
+  /// Radius of the knob that the user drags.
   final double knobRadius;
+
+  /// Explicit color for the knob; falls back to gradient end color if null.
   final Color? knobColor;
+
+  /// Color of the inactive/background ring.
   final Color? ringBackgroundColor;
+
+  /// Duration for animating programmatic value changes.
   final Duration animationDuration;
+
+  /// Curve used for animating programmatic value changes.
   final Curve animationCurve;
+
+  /// Optional label text displayed outside the slider.
   final String? labelText;
+
+  /// Text style applied to [labelText].
   final TextStyle? labelStyle;
 
+  /// Optional text rendered inside the slider but below the main value.
   final String? innerLabelText;
+
+  /// Text style applied to [innerLabelText].
   final TextStyle? innerLabelStyle;
 
+  /// Creates a gradient circular slider with customizable visuals and behavior.
   GradientCircularSlider({
     super.key,
     this.controller,
