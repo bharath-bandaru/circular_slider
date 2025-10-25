@@ -132,12 +132,14 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
       value: _normalizeValue(widget.minValue),
     );
     _sizeAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 200),
       vsync: this,
     );
     _sizeAnimation = Tween<double>(begin: 1.0, end: 0.5).animate(
       CurvedAnimation(
-          parent: _sizeAnimationController, curve: Curves.easeOutBack),
+        parent: _sizeAnimationController,
+        curve: Curves.easeOut,
+      ),
     );
     _knobScaleAnimationController = AnimationController(
       duration: const Duration(milliseconds: 200),
@@ -297,7 +299,7 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
       newNormalizedValue = 0.0;
     }
     if (newNormalizedValue == 1.0) {
-      if (!_hasFiredMaxValueHaptic && widget.enableHaptics) {
+      if (!_hasFiredMaxValueHaptic) {
         HapticFeedback.mediumImpact();
       }
       _hasFiredMaxValueHaptic = true;
@@ -357,6 +359,7 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
                     alignment: alignment,
                     child: Transform.scale(
                       scale: _sizeAnimation.value,
+                      alignment: Alignment.center,
                       child: SizedBox(
                         width: _minDimension,
                         height: _minDimension,
@@ -481,51 +484,56 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
         : RegExp('^$signPattern\\d*(\\.\\d*)?\$');
 
     return AnimatedOpacity(
+      duration: const Duration(milliseconds: 0),
       opacity: _isEditing ? 1.0 : 0.0,
-      duration: const Duration(milliseconds: 300),
-      child: IgnorePointer(
-        ignoring: !_isEditing,
-        child: Padding(
-          padding: const EdgeInsets.only(top: 16.0),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                widget.prefix,
-                style: TextStyle(
-                  color: widget.textColor,
-                  fontSize: fontSize * widget.prefixScale,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 4),
-              IntrinsicWidth(
-                child: TextField(
-                  controller: _textController,
-                  focusNode: _focusNode,
-                  textAlign: TextAlign.left,
-                  showCursor: false,
+      child: AnimatedSlide(
+        duration: const Duration(milliseconds: 0),
+        curve: Curves.easeInOut,
+        offset: _isEditing ? Offset.zero : const Offset(0, 1),
+        child: IgnorePointer(
+          ignoring: !_isEditing,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 16.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(
+                  widget.prefix,
                   style: TextStyle(
                     color: widget.textColor,
-                    fontSize: fontSize,
+                    fontSize: fontSize * widget.prefixScale,
                     fontWeight: FontWeight.bold,
                   ),
-                  maxLines: 1,
-                  keyboardType: textInputType,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(inputFormatterPattern),
-                  ],
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  onSubmitted: (_) => _toggleEditMode(forceState: false),
                 ),
-              ),
-            ],
+                const SizedBox(width: 4),
+                IntrinsicWidth(
+                  child: TextField(
+                    controller: _textController,
+                    focusNode: _focusNode,
+                    textAlign: TextAlign.left,
+                    showCursor: false,
+                    style: TextStyle(
+                      color: widget.textColor,
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    keyboardType: textInputType,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(inputFormatterPattern),
+                    ],
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    onSubmitted: (_) => _toggleEditMode(forceState: false),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

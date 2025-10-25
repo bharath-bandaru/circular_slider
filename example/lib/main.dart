@@ -29,7 +29,7 @@ class DemoPage extends StatefulWidget {
 }
 
 class _DemoPageState extends State<DemoPage> {
-  double _currentValue = 70324542.34;
+  double _currentValue = 101.34;
   final GradientCircularSliderController _controller =
       GradientCircularSliderController();
   // (global key removed — no longer needed with GestureDetector/unfocus approach)
@@ -61,7 +61,7 @@ class _DemoPageState extends State<DemoPage> {
                   enableHaptics: false,
                   initialSweepAnimationDuration:
                       const Duration(milliseconds: 500),
-                  maxValue: 703242323.34,
+                  maxValue: 101.99,
                   initialValue: _currentValue,
                   gradientColors: const [
                     Color(0xFFFFD700),
