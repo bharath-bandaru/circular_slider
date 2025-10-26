@@ -79,6 +79,7 @@ class _DemoPageState extends State<DemoPage> {
                   controller: _controller,
                   minValue: 0,
                   editModeInputSpacing: 20,
+                  editModeScaleFactor: 0.65,
                   enableHaptics: false,
                   initialSweepAnimationDuration:
                       const Duration(milliseconds: 500),

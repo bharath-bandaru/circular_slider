@@ -84,6 +84,9 @@ class GradientCircularSlider extends StatefulWidget {
   /// Vertical space between the circular slider and the inline text field while editing.
   final double editModeInputSpacing;
 
+  /// Scale factor applied to the circular slider while in edit mode (0 < value <= 1).
+  final double editModeScaleFactor;
+
   /// Creates a gradient circular slider with customizable visuals and behavior.
   GradientCircularSlider({
     super.key,
@@ -113,6 +116,7 @@ class GradientCircularSlider extends StatefulWidget {
     this.innerLabelText,
     this.innerLabelStyle,
     this.editModeInputSpacing = 30.0,
+    this.editModeScaleFactor = 0.5,
   })  : assert(minValue < maxValue, 'minValue must be less than maxValue'),
         assert(initialValue >= minValue && initialValue <= maxValue,
             'initialValue must be between minValue and maxValue'),
@@ -124,7 +128,9 @@ class GradientCircularSlider extends StatefulWidget {
         assert(!initialSweepAnimationDuration.isNegative,
             'initialSweepAnimationDuration must be zero or positive'),
         assert(editModeInputSpacing >= 0,
-            'editModeInputSpacing must be zero or positive') {
+            'editModeInputSpacing must be zero or positive'),
+        assert(editModeScaleFactor > 0 && editModeScaleFactor <= 1,
+            'editModeScaleFactor must be greater than 0 and at most 1') {
     if (gradientColors.length < 2) {
       throw ArgumentError('gradientColors must have at least 2 colors');
     }
@@ -203,12 +209,7 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    _sizeAnimation = Tween<double>(begin: 1.0, end: 0.5).animate(
-      CurvedAnimation(
-        parent: _sizeAnimationController,
-        curve: Curves.easeOut,
-      ),
-    );
+    _sizeAnimation = _createSizeAnimation();
     _knobScaleAnimationController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
@@ -245,6 +246,10 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
         !_isDragging &&
         !_isEditing) {
       _animateToValue(widget.initialValue);
+    }
+
+    if (oldWidget.editModeScaleFactor != widget.editModeScaleFactor) {
+      _sizeAnimation = _createSizeAnimation();
     }
   }
 
@@ -360,6 +365,18 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
       (value - widget.minValue) / (widget.maxValue - widget.minValue);
   double _denormalizeValue(double normalizedValue) =>
       normalizedValue * (widget.maxValue - widget.minValue) + widget.minValue;
+
+  Animation<double> _createSizeAnimation() {
+    return Tween<double>(
+      begin: 1.0,
+      end: widget.editModeScaleFactor,
+    ).animate(
+      CurvedAnimation(
+        parent: _sizeAnimationController,
+        curve: Curves.easeOut,
+      ),
+    );
+  }
 
   void _handlePanUpdate(Offset localPosition, Size size) {
     final center = Offset(size.width / 2, size.height / 2);

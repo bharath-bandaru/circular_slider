@@ -1,10 +1,15 @@
 # Changelog
 
+## 1.0.5 - Added editModeScaleFactor
+
+- Add `editModeScaleFactor` to control how large the circle remains while editing.
+
 ## 1.0.4 - Added editModeInputSpacing and isEditing Listener
 
 - Expose the slider's edit state through `GradientCircularSliderController.isEditing` and `Listenable` notifications.
 - Update the example app and README to demonstrate reacting to edit mode changes.
 - Document the `editModeInputSpacing` parameter in the README.
+
 
 ## 1.0.3 - Improve Documentation Coverage
 

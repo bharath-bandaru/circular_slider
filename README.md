@@ -71,6 +71,8 @@ GradientCircularSlider(
     Color(0xFF4ECDC4),
   ],
   initialSweepAnimationDuration: const Duration(milliseconds: 500),
+  editModeInputSpacing: 24,
+  editModeScaleFactor: 0.75,
   labelText: "TAP TO ENTER AMOUNT VALUE",
   labelStyle: TextStyle(
     color: Colors.amber.withAlpha(153),
@@ -112,7 +114,8 @@ GradientCircularSlider(
 Tap the value inside the ring to enter edit mode. The circle scales up, slides toward the top, and the numeric text field becomes interactive (with optional prefixes, decimals, and validation).  
 Use the optional `GradientCircularSliderController` to dismiss edit mode programmatically (for example when navigating away or tapping outside the widget) and to observe whether the slider is currently editing.
 
-Need breathing room between the circle and the inline text field? Use `editModeInputSpacing` to control the vertical gap so layouts look polished on every screen size.
+Need breathing room between the circle and the inline text field? Use `editModeInputSpacing` to control the vertical gap so layouts look polished on every screen size.  
+Want the circle to stay larger (or shrink less) while typing? Tune `editModeScaleFactor` (1.0 keeps the full size, smaller values shrink it).
 
 ```dart
 final sliderController = GradientCircularSliderController();
@@ -160,6 +163,7 @@ sliderController.addListener(() {
 | `animationDuration` | `Duration` | Duration for value interpolation when animating | `500ms` |
 | `animationCurve` | `Curve` | Curve for value interpolation | `Curves.easeInOut` |
 | `editModeInputSpacing` | `double` | Vertical space between the slider and the edit-mode input field | `30.0` |
+| `editModeScaleFactor` | `double` | Scale factor for the circular slider while editing (0–1] | `0.5` |
 
 ## Callbacks
 
