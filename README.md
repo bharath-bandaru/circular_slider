@@ -15,6 +15,7 @@ A beautiful and customizable circular slider widget with gradient progress for F
 🎯 **Draggable Knob** - Interactive knob with shadow/glow effects that follows the circular path  
 ⌨️ **Tap-to-Edit Input** - Tap the center text to type an exact value with validation and clamping  
 🧭 **Controller Support** - Use `GradientCircularSliderController` to dismiss edit mode programmatically  
+👂 **Edit Mode Awareness** - Listen to the controller to react when the slider enters or exits edit mode  
 🔤 **Dual Arc Labels** - Optional outer and inner curved labels that hug the ring perfectly  
 📳 **Haptic Feedback** - Tactile feedback during interaction (configurable)  
 🌀 **Initial Sweep Animation** - Optionally animate the first sweep after layout for delight  
@@ -109,7 +110,9 @@ GradientCircularSlider(
 ### Edit Mode & Controller
 
 Tap the value inside the ring to enter edit mode. The circle scales up, slides toward the top, and the numeric text field becomes interactive (with optional prefixes, decimals, and validation).  
-Use the optional `GradientCircularSliderController` to dismiss edit mode programmatically (for example when navigating away or tapping outside the widget).
+Use the optional `GradientCircularSliderController` to dismiss edit mode programmatically (for example when navigating away or tapping outside the widget) and to observe whether the slider is currently editing.
+
+Need breathing room between the circle and the inline text field? Use `editModeInputSpacing` to control the vertical gap so layouts look polished on every screen size.
 
 ```dart
 final sliderController = GradientCircularSliderController();
@@ -122,13 +125,19 @@ GradientCircularSlider(
 
 // Dismiss edit mode from anywhere in your widget tree
 sliderController.dismiss();
+
+// React to edit mode changes
+sliderController.addListener(() {
+  final bool isEditing = sliderController.isEditing;
+  debugPrint('Slider is ${isEditing ? '' : 'not '}editing');
+});
 ```
 
 ## Customization Options
 
 | Parameter | Type | Description | Default |
 |-----------|------|-------------|---------|
-| `controller` | `GradientCircularSliderController?` | Provides `dismiss()` to exit edit mode programmatically | `null` |
+| `controller` | `GradientCircularSliderController?` | Provides `dismiss()` and exposes `isEditing` plus `Listenable` updates | `null` |
 | `minValue` | `double` | Minimum slider value | `0` |
 | `maxValue` | `double` | Maximum slider value | `120` |
 | `initialValue` | `double` | Starting value inside the ring (required) | — |
@@ -150,6 +159,7 @@ sliderController.dismiss();
 | `knobShadows` | `List<BoxShadow>?` | Custom drop shadows for the knob | Gentle default glow |
 | `animationDuration` | `Duration` | Duration for value interpolation when animating | `500ms` |
 | `animationCurve` | `Curve` | Curve for value interpolation | `Curves.easeInOut` |
+| `editModeInputSpacing` | `double` | Vertical space between the slider and the edit-mode input field | `30.0` |
 
 ## Callbacks
 

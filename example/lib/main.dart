@@ -29,9 +29,29 @@ class DemoPage extends StatefulWidget {
 }
 
 class _DemoPageState extends State<DemoPage> {
-  double _currentValue = 101.34;
+  double _currentValue = 6.34;
   final GradientCircularSliderController _controller =
       GradientCircularSliderController();
+  bool _isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_handleControllerChanged);
+  }
+
+  void _handleControllerChanged() {
+    setState(() {
+      _isEditing = _controller.isEditing;
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_handleControllerChanged);
+    _controller.dispose();
+    super.dispose();
+  }
   // (global key removed — no longer needed with GestureDetector/unfocus approach)
 
   @override
@@ -58,6 +78,7 @@ class _DemoPageState extends State<DemoPage> {
                 child: GradientCircularSlider(
                   controller: _controller,
                   minValue: 0,
+                  editModeInputSpacing: 20,
                   enableHaptics: false,
                   initialSweepAnimationDuration:
                       const Duration(milliseconds: 500),
@@ -107,6 +128,11 @@ class _DemoPageState extends State<DemoPage> {
                 ),
               ),
               const SizedBox(height: 20),
+              Text(
+                _isEditing ? 'Editing amount…' : 'Viewing amount',
+                style: const TextStyle(color: Colors.white54),
+              ),
+              const SizedBox(height: 8),
               Text(
                 'Value: ₹${_currentValue.toStringAsFixed(2)}',
                 style: const TextStyle(

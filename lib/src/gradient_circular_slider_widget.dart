@@ -81,6 +81,9 @@ class GradientCircularSlider extends StatefulWidget {
   /// Text style applied to [innerLabelText].
   final TextStyle? innerLabelStyle;
 
+  /// Vertical space between the circular slider and the inline text field while editing.
+  final double editModeInputSpacing;
+
   /// Creates a gradient circular slider with customizable visuals and behavior.
   GradientCircularSlider({
     super.key,
@@ -109,6 +112,7 @@ class GradientCircularSlider extends StatefulWidget {
     this.labelStyle,
     this.innerLabelText,
     this.innerLabelStyle,
+    this.editModeInputSpacing = 30.0,
   })  : assert(minValue < maxValue, 'minValue must be less than maxValue'),
         assert(initialValue >= minValue && initialValue <= maxValue,
             'initialValue must be between minValue and maxValue'),
@@ -118,7 +122,9 @@ class GradientCircularSlider extends StatefulWidget {
         assert(decimalPrecision >= 0, 'decimalPrecision must be non-negative'),
         assert(knobRadius > 0, 'knobRadius must be positive'),
         assert(!initialSweepAnimationDuration.isNegative,
-            'initialSweepAnimationDuration must be zero or positive') {
+            'initialSweepAnimationDuration must be zero or positive'),
+        assert(editModeInputSpacing >= 0,
+            'editModeInputSpacing must be zero or positive') {
     if (gradientColors.length < 2) {
       throw ArgumentError('gradientColors must have at least 2 colors');
     }
@@ -131,8 +137,12 @@ class GradientCircularSlider extends StatefulWidget {
 /// Controller that can be used to programmatically control a
 /// [GradientCircularSlider]. Currently provides a `dismiss()` method which
 /// forces the slider out of edit mode if it is editing.
-class GradientCircularSliderController {
+class GradientCircularSliderController extends ChangeNotifier {
   VoidCallback? _dismissCallback;
+  bool _isEditing = false;
+
+  /// Whether the attached slider is currently in edit mode.
+  bool get isEditing => _isEditing;
 
   /// Force the slider to exit edit mode if it is currently in edit mode.
   void dismiss() => _dismissCallback?.call();
@@ -143,6 +153,13 @@ class GradientCircularSliderController {
 
   void _unbind() {
     _dismissCallback = null;
+    _updateEditingState(false);
+  }
+
+  void _updateEditingState(bool isEditing) {
+    if (_isEditing == isEditing) return;
+    _isEditing = isEditing;
+    notifyListeners();
   }
 }
 
@@ -167,6 +184,8 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
   final FocusNode _focusNode = FocusNode();
   bool _isUpdatingTextProgrammatically = false;
   double _minDimension = 0.0;
+  final GlobalKey _inputKey = GlobalKey();
+  double _inputHeight = 0.0;
 
   @override
   void initState() {
@@ -174,6 +193,7 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
     widget.controller?._bind(() {
       if (mounted) _toggleEditMode(forceState: false);
     });
+    widget.controller?._updateEditingState(_isEditing);
     _valueAnimationController = AnimationController(
       vsync: this,
       duration: widget.animationDuration,
@@ -214,10 +234,12 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
   void didUpdateWidget(GradientCircularSlider oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller != widget.controller) {
+      oldWidget.controller?._updateEditingState(false);
       oldWidget.controller?._unbind();
       widget.controller?._bind(() {
         if (mounted) _toggleEditMode(forceState: false);
       });
+      widget.controller?._updateEditingState(_isEditing);
     }
     if (oldWidget.initialValue != widget.initialValue &&
         !_isDragging &&
@@ -228,6 +250,7 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
 
   @override
   void dispose() {
+    widget.controller?._updateEditingState(false);
     widget.controller?._unbind();
     _valueAnimationController.dispose();
     _sizeAnimationController.dispose();
@@ -302,8 +325,11 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
   }
 
   void _toggleEditMode({bool? forceState}) {
+    final nextEditingState = forceState ?? !_isEditing;
+    if (nextEditingState == _isEditing) return;
+
     setState(() {
-      _isEditing = forceState ?? !_isEditing;
+      _isEditing = nextEditingState;
       if (_isEditing) {
         _sizeAnimationController.forward();
 
@@ -324,6 +350,8 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
         widget.onChanged?.call(clampedValue);
       }
     });
+
+    widget.controller?._updateEditingState(_isEditing);
   }
 
   bool _hasFiredMaxValueHaptic = false;
@@ -402,75 +430,89 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
                     Alignment.topCenter,
                     _sizeAnimationController.value,
                   )!;
+                  final sliderDimension = _minDimension * _sizeAnimation.value;
+                  final showLabels =
+                      !_isEditing && _sizeAnimationController.isDismissed;
 
                   return Align(
                     alignment: alignment,
-                    child: Transform.scale(
-                      scale: _sizeAnimation.value,
-                      alignment: Alignment.center,
-                      child: SizedBox(
-                        width: _minDimension,
-                        height: _minDimension,
-                        child: GestureDetector(
-                          onTapDown: _isEditing
-                              ? null
-                              : (_) => _knobScaleAnimationController?.forward(),
-                          onTapUp: _isEditing
-                              ? null
-                              : (_) => _knobScaleAnimationController?.reverse(),
-                          onTapCancel: _isEditing
-                              ? null
-                              : () => _knobScaleAnimationController?.reverse(),
-                          onPanStart: _isEditing
-                              ? null
-                              : (d) {
-                                  setState(() => _isDragging = true);
-                                  _knobScaleAnimationController?.forward();
-                                  widget.onChangeStart?.call();
-                                  _handlePanUpdate(d.localPosition,
-                                      Size(_minDimension, _minDimension));
-                                },
-                          onPanUpdate: _isEditing
-                              ? null
-                              : (d) => _handlePanUpdate(d.localPosition,
-                                  Size(_minDimension, _minDimension)),
-                          onPanEnd: _isEditing
-                              ? null
-                              : (_) {
-                                  setState(() => _isDragging = false);
-                                  _knobScaleAnimationController?.reverse();
-                                  widget.onChangeEnd?.call();
-                                },
-                          child: CustomPaint(
-                            size: Size(_minDimension, _minDimension),
-                            painter: _CircularSliderPainter(
-                              value: _valueAnimationController.value,
-                              gradientColors: widget.gradientColors,
-                              ringThickness: widget.ringThickness,
-                              knobRadius: widget.knobRadius,
-                              knobScale: _knobScaleAnimation?.value ?? 1.0,
-                              isEditing: _isEditing,
-                              knobColor: widget.knobColor ?? Colors.white,
-                              knobShadows: widget.knobShadows,
-                              ringBackgroundColor: widget.ringBackgroundColor ??
-                                  Colors.grey.withAlpha(51),
-                              labelText: widget.labelText,
-                              labelStyle: widget.labelStyle,
-                              innerLabelText: widget.innerLabelText,
-                              innerLabelStyle: widget.innerLabelStyle,
-                            ),
-                            child: Center(
-                                child: _buildCenterContent(denormalizedValue)),
+                    child: SizedBox(
+                      width: sliderDimension,
+                      height: sliderDimension,
+                      child: GestureDetector(
+                        onTapDown: _isEditing
+                            ? null
+                            : (_) => _knobScaleAnimationController?.forward(),
+                        onTapUp: _isEditing
+                            ? null
+                            : (_) => _knobScaleAnimationController?.reverse(),
+                        onTapCancel: _isEditing
+                            ? null
+                            : () => _knobScaleAnimationController?.reverse(),
+                        onPanStart: _isEditing
+                            ? null
+                            : (d) {
+                                setState(() => _isDragging = true);
+                                _knobScaleAnimationController?.forward();
+                                widget.onChangeStart?.call();
+                                _handlePanUpdate(
+                                  d.localPosition,
+                                  Size(sliderDimension, sliderDimension),
+                                );
+                              },
+                        onPanUpdate: _isEditing
+                            ? null
+                            : (d) => _handlePanUpdate(
+                                  d.localPosition,
+                                  Size(sliderDimension, sliderDimension),
+                                ),
+                        onPanEnd: _isEditing
+                            ? null
+                            : (_) {
+                                setState(() => _isDragging = false);
+                                _knobScaleAnimationController?.reverse();
+                                widget.onChangeEnd?.call();
+                              },
+                        child: CustomPaint(
+                          size: Size(sliderDimension, sliderDimension),
+                          painter: _CircularSliderPainter(
+                            value: _valueAnimationController.value,
+                            gradientColors: widget.gradientColors,
+                            ringThickness: widget.ringThickness,
+                            knobRadius: widget.knobRadius,
+                            knobScale: _knobScaleAnimation?.value ?? 1.0,
+                            isEditing: _isEditing,
+                            knobColor: widget.knobColor ?? Colors.white,
+                            knobShadows: widget.knobShadows,
+                            ringBackgroundColor: widget.ringBackgroundColor ??
+                                Colors.grey.withAlpha(51),
+                            labelText: widget.labelText,
+                            labelStyle: widget.labelStyle,
+                            innerLabelText: widget.innerLabelText,
+                            innerLabelStyle: widget.innerLabelStyle,
+                            showLabels: showLabels,
                           ),
+                          child: Center(
+                              child: _buildCenterContent(denormalizedValue)),
                         ),
                       ),
                     ),
                   );
                 },
               ),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: _buildCustomInput(),
+              AnimatedBuilder(
+                animation: _sizeAnimationController,
+                builder: (context, child) {
+                  final sliderDimension = _minDimension * _sizeAnimation.value;
+                  final offsetY = _computeInputOffset(sliderDimension);
+                  return Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Transform.translate(
+                      offset: Offset(0, offsetY),
+                      child: _buildCustomInput(),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -519,6 +561,28 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
     }
   }
 
+  double _computeInputOffset(double sliderDimension) {
+    if (!_isEditing) return 0.0;
+    final rawGap =
+        math.max(0.0, _minDimension - sliderDimension - _inputHeight);
+    final clampedGap = rawGap == 0.0
+        ? 0.0
+        : math.min(rawGap, math.max(0.0, widget.editModeInputSpacing));
+    return clampedGap - rawGap;
+  }
+
+  void _updateInputHeight() {
+    if (!mounted) return;
+    final context = _inputKey.currentContext;
+    if (context == null) return;
+    final renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+    final newHeight = renderBox.size.height;
+    if ((newHeight - _inputHeight).abs() > 0.5) {
+      setState(() => _inputHeight = newHeight);
+    }
+  }
+
   Widget _buildCustomInput() {
     final fontSize = _getFontSizeForDigits(_textController.text);
     final allowNegativeValues = widget.minValue < 0;
@@ -531,17 +595,19 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
         ? RegExp('^$signPattern\\d*\$')
         : RegExp('^$signPattern\\d*(\\.\\d*)?\$');
 
-    return AnimatedOpacity(
-      duration: const Duration(milliseconds: 0),
-      opacity: _isEditing ? 1.0 : 0.0,
-      child: AnimatedSlide(
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateInputHeight());
+
+    return KeyedSubtree(
+      key: _inputKey,
+      child: AnimatedOpacity(
         duration: const Duration(milliseconds: 0),
-        curve: Curves.easeInOut,
-        offset: _isEditing ? Offset.zero : const Offset(0, 1),
-        child: IgnorePointer(
-          ignoring: !_isEditing,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 16.0),
+        opacity: _isEditing ? 1.0 : 0.0,
+        child: AnimatedSlide(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          offset: _isEditing ? Offset.zero : const Offset(0, 1),
+          child: IgnorePointer(
+            ignoring: !_isEditing,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -638,6 +704,7 @@ class _CircularSliderPainter extends CustomPainter {
   final String? innerLabelText;
   final TextStyle? innerLabelStyle;
   final bool isEditing;
+  final bool showLabels;
 
   _CircularSliderPainter({
     required this.value,
@@ -650,6 +717,7 @@ class _CircularSliderPainter extends CustomPainter {
     required this.ringBackgroundColor,
     this.labelText,
     required this.isEditing,
+    required this.showLabels,
     this.labelStyle,
     this.innerLabelText,
     this.innerLabelStyle,
@@ -747,10 +815,10 @@ class _CircularSliderPainter extends CustomPainter {
       canvas.drawCircle(knobOffset, scaledKnobRadius, knobPaint);
     }
 
-    if (labelText != null && labelText!.isNotEmpty && !isEditing) {
+    if (labelText != null && labelText!.isNotEmpty && showLabels) {
       _drawCircularText(canvas, size, center, radius);
     }
-    if (innerLabelText != null && innerLabelText!.isNotEmpty && !isEditing) {
+    if (innerLabelText != null && innerLabelText!.isNotEmpty && showLabels) {
       _drawInnerCircularText(canvas, size, center, radius);
     }
   }
@@ -854,5 +922,6 @@ class _CircularSliderPainter extends CustomPainter {
       oldDelegate.labelText != labelText ||
       oldDelegate.innerLabelText != innerLabelText ||
       oldDelegate.innerLabelStyle != innerLabelStyle ||
-      oldDelegate.isEditing != isEditing;
+      oldDelegate.isEditing != isEditing ||
+      oldDelegate.showLabels != showLabels;
 }
