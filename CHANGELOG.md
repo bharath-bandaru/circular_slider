@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.7 - Improved Animations
+
+- Renamed `isClampToInteger` to `shouldClampToInteger` for better naming
+- Improved handle animations
+
 ## 1.0.6 - Sweep Duration Renames & Integer Snapping
 
 - Renamed `animationDuration` to `sweepAnimationDuration` to better describe its role in value interpolation.

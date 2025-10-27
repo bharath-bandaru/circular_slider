@@ -43,7 +43,7 @@ class GradientCircularSlider extends StatefulWidget {
   final int decimalPrecision;
 
   /// Snap drag interactions to whole-number values when true.
-  final bool isClampToInteger;
+  final bool shouldClampToInteger;
 
   /// Callback invoked whenever the slider's value changes due to user input.
   final ValueChanged<double>? onChanged;
@@ -105,7 +105,7 @@ class GradientCircularSlider extends StatefulWidget {
     this.enableHaptics = true,
     this.textColor = Colors.white,
     this.decimalPrecision = 2,
-    this.isClampToInteger = false,
+    this.shouldClampToInteger = false,
     this.onChanged,
     this.onChangeStart,
     this.onChangeEnd,
@@ -196,6 +196,8 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
   double _minDimension = 0.0;
   final GlobalKey _inputKey = GlobalKey();
   double _inputHeight = 0.0;
+  double? _lastReportedDragValue;
+  static const double _dispatchEpsilon = 1e-6;
 
   @override
   void initState() {
@@ -224,6 +226,7 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
     );
     _setText(_denormalizeValue(_valueAnimationController.value)
         .toStringAsFixed(widget.decimalPrecision));
+    _lastReportedDragValue = _denormalizeValue(_valueAnimationController.value);
     _textController.addListener(_onTextChanged);
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus && _isEditing) {
@@ -314,6 +317,7 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
           curve: widget.animationCurve,
         );
       }
+      _recordDispatchedValue(clampedValue);
       widget.onChanged?.call(clampedValue);
     }
   }
@@ -339,6 +343,7 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
       curve: curveOverride ?? widget.animationCurve,
     );
     _setText(clampedValue.toStringAsFixed(widget.decimalPrecision));
+    _recordDispatchedValue(clampedValue);
   }
 
   void _toggleEditMode({bool? forceState}) {
@@ -391,9 +396,18 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
   }
 
   double _clampDragValue(double value) {
-    if (!widget.isClampToInteger) return value;
+    if (!widget.shouldClampToInteger) return value;
     final snapped = value.roundToDouble();
     return snapped.clamp(widget.minValue, widget.maxValue).toDouble();
+  }
+
+  bool _shouldDispatchValue(double value) {
+    if (_lastReportedDragValue == null) return true;
+    return (_lastReportedDragValue! - value).abs() > _dispatchEpsilon;
+  }
+
+  void _recordDispatchedValue(double value) {
+    _lastReportedDragValue = value;
   }
 
   void _handlePanUpdate(Offset localPosition, Size size) {
@@ -427,21 +441,33 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
       );
       final denormalizedValue = _denormalizeValue(1.0);
       _setText(denormalizedValue.toStringAsFixed(widget.decimalPrecision));
-      if (widget.enableHaptics) HapticFeedback.mediumImpact();
-      widget.onChanged?.call(denormalizedValue);
+      final shouldNotify = _shouldDispatchValue(denormalizedValue);
+      if (shouldNotify) {
+        _recordDispatchedValue(denormalizedValue);
+        if (widget.enableHaptics) HapticFeedback.mediumImpact();
+        widget.onChanged?.call(denormalizedValue);
+      }
       return;
     }
 
-    var denormalizedValue = _denormalizeValue(newNormalizedValue);
-    var normalizedValueForController = newNormalizedValue;
-    denormalizedValue = _clampDragValue(denormalizedValue);
-    if (widget.isClampToInteger) {
-      normalizedValueForController = _normalizeValue(denormalizedValue);
+    final rawValue = _denormalizeValue(newNormalizedValue);
+    double valueForConsumers = rawValue;
+    bool shouldNotify = true;
+    if (widget.shouldClampToInteger) {
+      valueForConsumers = _clampDragValue(rawValue);
+      shouldNotify = _shouldDispatchValue(valueForConsumers);
     }
-    _valueAnimationController.value = normalizedValueForController;
-    _setText(denormalizedValue.toStringAsFixed(widget.decimalPrecision));
-    if (widget.enableHaptics) HapticFeedback.lightImpact();
-    widget.onChanged?.call(denormalizedValue);
+    _valueAnimationController.value = newNormalizedValue;
+    _setText(valueForConsumers.toStringAsFixed(widget.decimalPrecision));
+    if (!widget.shouldClampToInteger) {
+      _recordDispatchedValue(valueForConsumers);
+      if (widget.enableHaptics) HapticFeedback.lightImpact();
+      widget.onChanged?.call(valueForConsumers);
+    } else if (shouldNotify) {
+      _recordDispatchedValue(valueForConsumers);
+      if (widget.enableHaptics) HapticFeedback.lightImpact();
+      widget.onChanged?.call(valueForConsumers);
+    }
   }
 
   @override
@@ -464,6 +490,10 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
                 builder: (context, child) {
                   final denormalizedValue =
                       _denormalizeValue(_valueAnimationController.value);
+                  final displayValue =
+                      widget.shouldClampToInteger && _isDragging
+                          ? _clampDragValue(denormalizedValue)
+                          : denormalizedValue;
 
                   final alignment = Alignment.lerp(
                     Alignment.center,
@@ -511,6 +541,28 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
                             : (_) {
                                 setState(() => _isDragging = false);
                                 _knobScaleAnimationController?.reverse();
+                                if (widget.shouldClampToInteger) {
+                                  final snappedValue = _clampDragValue(
+                                    _denormalizeValue(
+                                      _valueAnimationController.value,
+                                    ),
+                                  );
+                                  final normalizedTarget =
+                                      _normalizeValue(snappedValue);
+                                  _valueAnimationController.animateTo(
+                                    normalizedTarget,
+                                    duration: widget.sweepAnimationDuration,
+                                    curve: widget.animationCurve,
+                                  );
+                                  _setText(snappedValue.toStringAsFixed(
+                                      widget.decimalPrecision));
+                                  final shouldNotify =
+                                      _shouldDispatchValue(snappedValue);
+                                  if (shouldNotify) {
+                                    _recordDispatchedValue(snappedValue);
+                                    widget.onChanged?.call(snappedValue);
+                                  }
+                                }
                                 widget.onChangeEnd?.call();
                               },
                         child: CustomPaint(
@@ -532,8 +584,8 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
                             innerLabelStyle: widget.innerLabelStyle,
                             showLabels: showLabels,
                           ),
-                          child: Center(
-                              child: _buildCenterContent(denormalizedValue)),
+                          child:
+                              Center(child: _buildCenterContent(displayValue)),
                         ),
                       ),
                     ),

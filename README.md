@@ -19,7 +19,7 @@ A beautiful and customizable circular slider widget with gradient progress for F
 🔤 **Dual Arc Labels** - Optional outer and inner curved labels that hug the ring perfectly  
 📳 **Haptic Feedback** - Tactile feedback during interaction (configurable)  
 🌀 **Initial Sweep Animation** - Optionally delay and animate the first sweep after layout (`initialSweepDelayDuration` + `sweepAnimationDuration`)  
-🔢 **Integer Snapping** - Clamp drag gestures to whole numbers with `isClampToInteger` when the UI demands discrete values  
+🔢 **Integer Snapping** - Clamp drag gestures to whole numbers with `shouldClampToInteger` when the UI demands discrete values  
 🎭 **Smart Size/Position Animation** - Widget lifts toward the top and eases out while editing  
 🎨 **Fully Customizable** - Colors, sizes, styles, shadows, and behaviors are all configurable
 
@@ -98,7 +98,7 @@ GradientCircularSlider(
   ringBackgroundColor: Colors.grey.shade800,
   knobColor: Colors.amber,
   enableHaptics: false,
-  isClampToInteger: true,
+  shouldClampToInteger: true,
   knobShadows: const [
     BoxShadow(
       color: Color.fromARGB(112, 0, 0, 0),
@@ -155,7 +155,7 @@ sliderController.addListener(() {
 | `prefixScale` | `double` | Ratio of prefix font size to value font (0–1) | `0.6` |
 | `textColor` | `Color` | Color for the center value while not editing | `Colors.white` |
 | `decimalPrecision` | `int` | Digits after the decimal point | `2` |
-| `isClampToInteger` | `bool` | Snaps drag gestures to whole-number values while still allowing precise typed input | `false` |
+| `shouldClampToInteger` | `bool` | Snaps drag gestures to whole-number values while still allowing precise typed input | `false` |
 | `labelText` | `String?` | Optional curved label along the top of the ring | `null` |
 | `labelStyle` | `TextStyle?` | Style for the outer curved label | `null` |
 | `innerLabelText` | `String?` | Optional curved label along the inner ring | `null` |
