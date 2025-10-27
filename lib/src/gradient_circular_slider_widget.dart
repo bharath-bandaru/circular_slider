@@ -305,7 +305,15 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
     if (newValue != null) {
       final clampedValue = newValue.clamp(widget.minValue, widget.maxValue);
       final normalizedValue = _normalizeValue(clampedValue);
-      _valueAnimationController.value = normalizedValue;
+      if ((_valueAnimationController.value - normalizedValue).abs() < 1e-6) {
+        _valueAnimationController.value = normalizedValue;
+      } else {
+        _valueAnimationController.animateTo(
+          normalizedValue,
+          duration: widget.sweepAnimationDuration,
+          curve: widget.animationCurve,
+        );
+      }
       widget.onChanged?.call(clampedValue);
     }
   }
