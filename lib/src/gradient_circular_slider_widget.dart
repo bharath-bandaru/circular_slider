@@ -400,6 +400,9 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
 
   double _clampDragValue(double value) {
     if (!widget.shouldClampToInteger) return value;
+    if ((widget.maxValue - value).abs() <= _dispatchEpsilon) {
+      return widget.maxValue;
+    }
     final snapped = value.roundToDouble();
     return snapped.clamp(widget.minValue, widget.maxValue).toDouble();
   }

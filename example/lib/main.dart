@@ -84,7 +84,7 @@ class _DemoPageState extends State<DemoPage> {
                   sweepAnimationDuration: const Duration(milliseconds: 500),
                   enableHaptics: false,
                   initialSweepDelayDuration: const Duration(milliseconds: 500),
-                  maxValue: 10,
+                  maxValue: 10.01,
                   initialValue: _currentValue,
                   gradientColors: const [
                     Color(0xFFFFD700),

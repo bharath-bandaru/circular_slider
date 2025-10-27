@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.9 - Drag improvements
+
+- minor changes
+
 ## 1.0.8 - Changed input textColor to accept whole textStyle editTextStyle
 
 - Replaced the `textColor` parameter with `editTextStyle` for richer editing and display styling.
