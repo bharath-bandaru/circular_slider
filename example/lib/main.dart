@@ -83,7 +83,7 @@ class _DemoPageState extends State<DemoPage> {
                   editModeScaleFactor: 0.65,
                   sweepAnimationDuration: const Duration(milliseconds: 500),
                   enableHaptics: false,
-                  initialSweepDelayDuration: const Duration(milliseconds: 2000),
+                  initialSweepDelayDuration: const Duration(milliseconds: 500),
                   maxValue: 10,
                   initialValue: _currentValue,
                   gradientColors: const [
@@ -112,7 +112,10 @@ class _DemoPageState extends State<DemoPage> {
                   decimalPrecision: 2,
                   ringThickness: 27,
                   knobRadius: 16,
-                  textColor: Colors.amber,
+                  editTextStyle: const TextStyle(
+                    color: Colors.amber,
+                    fontWeight: FontWeight.bold,
+                  ),
                   ringBackgroundColor: Colors.grey.shade800,
                   knobColor: Colors.amber,
                   knobShadows: const [

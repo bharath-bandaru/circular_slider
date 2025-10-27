@@ -20,8 +20,8 @@ void main() {
           home: Scaffold(
             body: GradientCircularSlider(
               initialValue: 50,
-              animationDuration: Duration.zero,
-              initialSweepAnimationDuration: Duration.zero,
+              sweepAnimationDuration: Duration.zero,
+              initialSweepDelayDuration: Duration.zero,
             ),
           ),
         ),
@@ -38,8 +38,8 @@ void main() {
             body: GradientCircularSlider(
               initialValue: 42.5,
               decimalPrecision: 1,
-              animationDuration: Duration.zero,
-              initialSweepAnimationDuration: Duration.zero,
+              sweepAnimationDuration: Duration.zero,
+              initialSweepDelayDuration: Duration.zero,
             ),
           ),
         ),
@@ -58,8 +58,8 @@ void main() {
               initialValue: 75,
               prefix: '%',
               decimalPrecision: 0,
-              animationDuration: Duration.zero,
-              initialSweepAnimationDuration: Duration.zero,
+              sweepAnimationDuration: Duration.zero,
+              initialSweepDelayDuration: Duration.zero,
             ),
           ),
         ),
@@ -77,8 +77,8 @@ void main() {
             body: GradientCircularSlider(
               initialValue: 50,
               labelText: 'TEST LABEL',
-              animationDuration: Duration.zero,
-              initialSweepAnimationDuration: Duration.zero,
+              sweepAnimationDuration: Duration.zero,
+              initialSweepDelayDuration: Duration.zero,
             ),
           ),
         ),
@@ -101,8 +101,8 @@ void main() {
               minValue: minValue,
               maxValue: maxValue,
               initialValue: initialValue,
-              animationDuration: Duration.zero,
-              initialSweepAnimationDuration: Duration.zero,
+              sweepAnimationDuration: Duration.zero,
+              initialSweepDelayDuration: Duration.zero,
             ),
           ),
         ),
@@ -125,8 +125,8 @@ void main() {
                 height: 300,
                 child: GradientCircularSlider(
                   initialValue: 50,
-                  animationDuration: Duration.zero,
-                  initialSweepAnimationDuration: Duration.zero,
+                  sweepAnimationDuration: Duration.zero,
+                  initialSweepDelayDuration: Duration.zero,
                   onChanged: (value) {
                     changedValue = value;
                   },
@@ -158,8 +158,8 @@ void main() {
                 height: 300,
                 child: GradientCircularSlider(
                   initialValue: 50,
-                  animationDuration: Duration.zero,
-                  initialSweepAnimationDuration: Duration.zero,
+                  sweepAnimationDuration: Duration.zero,
+                  initialSweepDelayDuration: Duration.zero,
                   onChangeStart: () {
                     startCalled = true;
                   },
@@ -193,8 +193,8 @@ void main() {
                   child: GradientCircularSlider(
                     initialValue: 42.123456,
                     decimalPrecision: 0,
-                    animationDuration: Duration.zero,
-                    initialSweepAnimationDuration: Duration.zero,
+                    sweepAnimationDuration: Duration.zero,
+                    initialSweepDelayDuration: Duration.zero,
                   ),
                 ),
                 SizedBox(
@@ -203,8 +203,8 @@ void main() {
                   child: GradientCircularSlider(
                     initialValue: 42.123456,
                     decimalPrecision: 3,
-                    animationDuration: Duration.zero,
-                    initialSweepAnimationDuration: Duration.zero,
+                    sweepAnimationDuration: Duration.zero,
+                    initialSweepDelayDuration: Duration.zero,
                   ),
                 ),
               ],
@@ -217,7 +217,7 @@ void main() {
       expect(find.text('42.123'), findsWidgets);
     });
 
-    testWidgets('applies custom text color', (WidgetTester tester) async {
+    testWidgets('applies custom edit text style', (WidgetTester tester) async {
       const customColor = Colors.red;
 
       await tester.pumpApp(
@@ -225,9 +225,9 @@ void main() {
           home: Scaffold(
             body: GradientCircularSlider(
               initialValue: 50,
-              textColor: customColor,
-              animationDuration: Duration.zero,
-              initialSweepAnimationDuration: Duration.zero,
+              editTextStyle: const TextStyle(color: customColor),
+              sweepAnimationDuration: Duration.zero,
+              initialSweepDelayDuration: Duration.zero,
             ),
           ),
         ),
@@ -245,8 +245,8 @@ void main() {
             body: GradientCircularSlider(
               initialValue: 50,
               gradientColors: const [Colors.red, Colors.blue, Colors.green],
-              animationDuration: Duration.zero,
-              initialSweepAnimationDuration: Duration.zero,
+              sweepAnimationDuration: Duration.zero,
+              initialSweepDelayDuration: Duration.zero,
             ),
           ),
         ),
@@ -263,8 +263,8 @@ void main() {
             body: GradientCircularSlider(
               initialValue: 50,
               labelText: null,
-              animationDuration: Duration.zero,
-              initialSweepAnimationDuration: Duration.zero,
+              sweepAnimationDuration: Duration.zero,
+              initialSweepDelayDuration: Duration.zero,
             ),
           ),
         ),
@@ -280,8 +280,8 @@ void main() {
             body: GradientCircularSlider(
               initialValue: 50,
               ringThickness: 30,
-              animationDuration: Duration.zero,
-              initialSweepAnimationDuration: Duration.zero,
+              sweepAnimationDuration: Duration.zero,
+              initialSweepDelayDuration: Duration.zero,
             ),
           ),
         ),
@@ -297,8 +297,8 @@ void main() {
             body: GradientCircularSlider(
               initialValue: 50,
               knobRadius: 20,
-              animationDuration: Duration.zero,
-              initialSweepAnimationDuration: Duration.zero,
+              sweepAnimationDuration: Duration.zero,
+              initialSweepDelayDuration: Duration.zero,
             ),
           ),
         ),
@@ -316,8 +316,8 @@ void main() {
               initialValue: 5000,
               maxValue: 10000,
               prefix: '₹',
-              animationDuration: Duration.zero,
-              initialSweepAnimationDuration: Duration.zero,
+              sweepAnimationDuration: Duration.zero,
+              initialSweepDelayDuration: Duration.zero,
             ),
           ),
         ),
@@ -333,8 +333,8 @@ void main() {
           home: Scaffold(
             body: GradientCircularSlider(
               initialValue: 0,
-              animationDuration: const Duration(milliseconds: 300),
-              initialSweepAnimationDuration: Duration.zero,
+              sweepAnimationDuration: const Duration(milliseconds: 300),
+              initialSweepDelayDuration: Duration.zero,
             ),
           ),
         ),
@@ -348,8 +348,8 @@ void main() {
           home: Scaffold(
             body: GradientCircularSlider(
               initialValue: 100,
-              animationDuration: const Duration(milliseconds: 300),
-              initialSweepAnimationDuration: Duration.zero,
+              sweepAnimationDuration: const Duration(milliseconds: 300),
+              initialSweepDelayDuration: Duration.zero,
             ),
           ),
         ),
@@ -374,8 +374,8 @@ void main() {
                   height: 200,
                   child: GradientCircularSlider(
                     initialValue: 50,
-                    animationDuration: Duration.zero,
-                    initialSweepAnimationDuration: Duration.zero,
+                    sweepAnimationDuration: Duration.zero,
+                    initialSweepDelayDuration: Duration.zero,
                   ),
                 ),
                 SizedBox(
@@ -383,8 +383,8 @@ void main() {
                   height: 400,
                   child: GradientCircularSlider(
                     initialValue: 50,
-                    animationDuration: Duration.zero,
-                    initialSweepAnimationDuration: Duration.zero,
+                    sweepAnimationDuration: Duration.zero,
+                    initialSweepDelayDuration: Duration.zero,
                   ),
                 ),
               ],
@@ -405,8 +405,8 @@ void main() {
               initialValue: 50,
               prefix: '%',
               prefixScale: 0.5,
-              animationDuration: Duration.zero,
-              initialSweepAnimationDuration: Duration.zero,
+              sweepAnimationDuration: Duration.zero,
+              initialSweepDelayDuration: Duration.zero,
             ),
           ),
         ),

@@ -20,6 +20,7 @@ A beautiful and customizable circular slider widget with gradient progress for F
 📳 **Haptic Feedback** - Tactile feedback during interaction (configurable)  
 🌀 **Initial Sweep Animation** - Optionally delay and animate the first sweep after layout (`initialSweepDelayDuration` + `sweepAnimationDuration`)  
 🔢 **Integer Snapping** - Clamp drag gestures to whole numbers with `shouldClampToInteger` when the UI demands discrete values  
+📝 **Editable Value Styling** - Customize the editing/display text via `editTextStyle`  
 🎭 **Smart Size/Position Animation** - Widget lifts toward the top and eases out while editing  
 🎨 **Fully Customizable** - Colors, sizes, styles, shadows, and behaviors are all configurable
 
@@ -94,7 +95,10 @@ GradientCircularSlider(
   decimalPrecision: 2,
   ringThickness: 27,
   knobRadius: 16,
-  textColor: Colors.amber,
+  editTextStyle: const TextStyle(
+    color: Colors.amber,
+    fontWeight: FontWeight.bold,
+  ),
   ringBackgroundColor: Colors.grey.shade800,
   knobColor: Colors.amber,
   enableHaptics: false,
@@ -153,7 +157,7 @@ sliderController.addListener(() {
 | `ringBackgroundColor` | `Color?` | Background/track color of the ring | `Colors.grey.withAlpha(51)` |
 | `prefix` | `String` | Symbol before the value (e.g. `$`, `₹`, `%`) | `'$'` |
 | `prefixScale` | `double` | Ratio of prefix font size to value font (0–1) | `0.6` |
-| `textColor` | `Color` | Color for the center value while not editing | `Colors.white` |
+| `editTextStyle` | `TextStyle` | Base style for the center value and edit-mode input | Bold white text |
 | `decimalPrecision` | `int` | Digits after the decimal point | `2` |
 | `shouldClampToInteger` | `bool` | Snaps drag gestures to whole-number values while still allowing precise typed input | `false` |
 | `labelText` | `String?` | Optional curved label along the top of the ring | `null` |

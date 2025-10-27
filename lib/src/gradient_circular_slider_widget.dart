@@ -36,8 +36,8 @@ class GradientCircularSlider extends StatefulWidget {
   /// Whether to trigger haptic feedback when the user drags the knob.
   final bool enableHaptics;
 
-  /// Color for the main numeric text displayed in the center.
-  final Color textColor;
+  /// Text style applied to the editable value (also used as the base for display).
+  final TextStyle editTextStyle;
 
   /// Number of decimal places rendered for the current value.
   final int decimalPrecision;
@@ -103,7 +103,10 @@ class GradientCircularSlider extends StatefulWidget {
     this.prefix = r'$',
     this.prefixScale = 0.6,
     this.enableHaptics = true,
-    this.textColor = Colors.white,
+    this.editTextStyle = const TextStyle(
+      color: Colors.white,
+      fontWeight: FontWeight.bold,
+    ),
     this.decimalPrecision = 2,
     this.shouldClampToInteger = false,
     this.onChanged,
@@ -678,6 +681,10 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
   Widget _buildCustomInput() {
     final fontSize = _getFontSizeForDigits(_textController.text);
     final allowNegativeValues = widget.minValue < 0;
+    final baseStyle = widget.editTextStyle;
+    final prefixStyle =
+        baseStyle.copyWith(fontSize: fontSize * widget.prefixScale);
+    final valueStyle = baseStyle.copyWith(fontSize: fontSize);
     final textInputType = TextInputType.numberWithOptions(
       decimal: widget.decimalPrecision > 0,
       signed: allowNegativeValues,
@@ -707,11 +714,7 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
               children: [
                 Text(
                   widget.prefix,
-                  style: TextStyle(
-                    color: widget.textColor,
-                    fontSize: fontSize * widget.prefixScale,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: prefixStyle,
                 ),
                 const SizedBox(width: 4),
                 IntrinsicWidth(
@@ -720,11 +723,7 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
                     focusNode: _focusNode,
                     textAlign: TextAlign.left,
                     showCursor: false,
-                    style: TextStyle(
-                      color: widget.textColor,
-                      fontSize: fontSize,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: valueStyle,
                     maxLines: 1,
                     keyboardType: textInputType,
                     inputFormatters: [
@@ -749,6 +748,10 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
   Widget _buildCenterText(double value) {
     final displayValue = value.toStringAsFixed(widget.decimalPrecision);
     const double fontSize = 48.0;
+    final baseStyle = widget.editTextStyle;
+    final prefixStyle =
+        baseStyle.copyWith(fontSize: fontSize * widget.prefixScale);
+    final valueStyle = baseStyle.copyWith(fontSize: fontSize);
     return Padding(
       padding: EdgeInsets.all(widget.ringThickness + widget.knobRadius),
       child: Row(
@@ -758,20 +761,12 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
         children: [
           Text(
             widget.prefix,
-            style: TextStyle(
-              color: widget.textColor,
-              fontSize: fontSize * widget.prefixScale,
-              fontWeight: FontWeight.bold,
-            ),
+            style: prefixStyle,
           ),
           Flexible(
             child: AutoSizeText(
               displayValue,
-              style: TextStyle(
-                color: widget.textColor,
-                fontSize: fontSize,
-                fontWeight: FontWeight.bold,
-              ),
+              style: valueStyle,
               maxLines: 1,
               minFontSize: 10,
             ),

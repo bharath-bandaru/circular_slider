@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.8 - Changed input textColor to accept whole textStyle editTextStyle
+
+- Replaced the `textColor` parameter with `editTextStyle` for richer editing and display styling.
+
 ## 1.0.7 - Improved Animations
 
 - Renamed `isClampToInteger` to `shouldClampToInteger` for better naming
@@ -9,7 +13,7 @@
 
 - Renamed `animationDuration` to `sweepAnimationDuration` to better describe its role in value interpolation.
 - Renamed `initialSweepAnimationDuration` to `initialSweepDelayDuration` to clarify it now governs the delay before the first sweep.
-- Added the `isClampToInteger` flag to make drag gestures snap to whole-number values when desired.
+- Added the `shouldClampToInteger` flag to make drag gestures snap to whole-number values when desired.
 - Updated the README to reflect the new API.
 
 ## 1.0.5 - Added editModeScaleFactor
