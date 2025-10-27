@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.6 - Sweep Duration Renames & Integer Snapping
+
+- Renamed `animationDuration` to `sweepAnimationDuration` to better describe its role in value interpolation.
+- Renamed `initialSweepAnimationDuration` to `initialSweepDelayDuration` to clarify it now governs the delay before the first sweep.
+- Added the `isClampToInteger` flag to make drag gestures snap to whole-number values when desired.
+- Updated the README to reflect the new API.
+
 ## 1.0.5 - Added editModeScaleFactor
 
 - Add `editModeScaleFactor` to control how large the circle remains while editing.

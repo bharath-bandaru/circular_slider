@@ -29,7 +29,7 @@ class DemoPage extends StatefulWidget {
 }
 
 class _DemoPageState extends State<DemoPage> {
-  double _currentValue = 6.34;
+  double _currentValue = 101.34;
   final GradientCircularSliderController _controller =
       GradientCircularSliderController();
   bool _isEditing = false;
@@ -78,11 +78,12 @@ class _DemoPageState extends State<DemoPage> {
                 child: GradientCircularSlider(
                   controller: _controller,
                   minValue: 0,
+                  isClampToInteger: true,
                   editModeInputSpacing: 20,
                   editModeScaleFactor: 0.65,
+                  sweepAnimationDuration: const Duration(milliseconds: 500),
                   enableHaptics: false,
-                  initialSweepAnimationDuration:
-                      const Duration(milliseconds: 500),
+                  initialSweepDelayDuration: const Duration(milliseconds: 2000),
                   maxValue: 101.99,
                   initialValue: _currentValue,
                   gradientColors: const [

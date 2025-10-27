@@ -18,7 +18,8 @@ A beautiful and customizable circular slider widget with gradient progress for F
 👂 **Edit Mode Awareness** - Listen to the controller to react when the slider enters or exits edit mode  
 🔤 **Dual Arc Labels** - Optional outer and inner curved labels that hug the ring perfectly  
 📳 **Haptic Feedback** - Tactile feedback during interaction (configurable)  
-🌀 **Initial Sweep Animation** - Optionally animate the first sweep after layout for delight  
+🌀 **Initial Sweep Animation** - Optionally delay and animate the first sweep after layout (`initialSweepDelayDuration` + `sweepAnimationDuration`)  
+🔢 **Integer Snapping** - Clamp drag gestures to whole numbers with `isClampToInteger` when the UI demands discrete values  
 🎭 **Smart Size/Position Animation** - Widget lifts toward the top and eases out while editing  
 🎨 **Fully Customizable** - Colors, sizes, styles, shadows, and behaviors are all configurable
 
@@ -70,7 +71,8 @@ GradientCircularSlider(
     Color(0xFFFF6B6B),
     Color(0xFF4ECDC4),
   ],
-  initialSweepAnimationDuration: const Duration(milliseconds: 500),
+  initialSweepDelayDuration: const Duration(milliseconds: 300),
+  sweepAnimationDuration: const Duration(milliseconds: 500),
   editModeInputSpacing: 24,
   editModeScaleFactor: 0.75,
   labelText: "TAP TO ENTER AMOUNT VALUE",
@@ -96,6 +98,7 @@ GradientCircularSlider(
   ringBackgroundColor: Colors.grey.shade800,
   knobColor: Colors.amber,
   enableHaptics: false,
+  isClampToInteger: true,
   knobShadows: const [
     BoxShadow(
       color: Color.fromARGB(112, 0, 0, 0),
@@ -144,7 +147,7 @@ sliderController.addListener(() {
 | `minValue` | `double` | Minimum slider value | `0` |
 | `maxValue` | `double` | Maximum slider value | `120` |
 | `initialValue` | `double` | Starting value inside the ring (required) | — |
-| `initialSweepAnimationDuration` | `Duration` | Adds a delayed sweep animation after layout | `Duration.zero` |
+| `initialSweepDelayDuration` | `Duration` | Delay before running the one-time sweep animation after layout | `Duration.zero` |
 | `gradientColors` | `List<Color>` | Colors for the circular gradient (min 2) | `[Colors.lightBlueAccent, Colors.blue]` |
 | `ringThickness` | `double` | Width of the circular ring | `20.0` |
 | `ringBackgroundColor` | `Color?` | Background/track color of the ring | `Colors.grey.withAlpha(51)` |
@@ -152,6 +155,7 @@ sliderController.addListener(() {
 | `prefixScale` | `double` | Ratio of prefix font size to value font (0–1) | `0.6` |
 | `textColor` | `Color` | Color for the center value while not editing | `Colors.white` |
 | `decimalPrecision` | `int` | Digits after the decimal point | `2` |
+| `isClampToInteger` | `bool` | Snaps drag gestures to whole-number values while still allowing precise typed input | `false` |
 | `labelText` | `String?` | Optional curved label along the top of the ring | `null` |
 | `labelStyle` | `TextStyle?` | Style for the outer curved label | `null` |
 | `innerLabelText` | `String?` | Optional curved label along the inner ring | `null` |
@@ -160,7 +164,7 @@ sliderController.addListener(() {
 | `knobRadius` | `double` | Size of the draggable knob | `15` |
 | `knobColor` | `Color?` | Color of the knob fill | `Colors.white` |
 | `knobShadows` | `List<BoxShadow>?` | Custom drop shadows for the knob | Gentle default glow |
-| `animationDuration` | `Duration` | Duration for value interpolation when animating | `500ms` |
+| `sweepAnimationDuration` | `Duration` | Duration for value interpolation when animating | `500ms` |
 | `animationCurve` | `Curve` | Curve for value interpolation | `Curves.easeInOut` |
 | `editModeInputSpacing` | `double` | Vertical space between the slider and the edit-mode input field | `30.0` |
 | `editModeScaleFactor` | `double` | Scale factor for the circular slider while editing (0–1] | `0.5` |

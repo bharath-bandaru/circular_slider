@@ -30,8 +30,8 @@ class GradientCircularSlider extends StatefulWidget {
   /// Scale factor applied to the prefix text relative to the main value.
   final double prefixScale;
 
-  /// Duration of the one-time sweep animation executed after build.
-  final Duration initialSweepAnimationDuration;
+  /// Delay duration of the one-time sweep animation executed after build.
+  final Duration initialSweepDelayDuration;
 
   /// Whether to trigger haptic feedback when the user drags the knob.
   final bool enableHaptics;
@@ -41,6 +41,9 @@ class GradientCircularSlider extends StatefulWidget {
 
   /// Number of decimal places rendered for the current value.
   final int decimalPrecision;
+
+  /// Snap drag interactions to whole-number values when true.
+  final bool isClampToInteger;
 
   /// Callback invoked whenever the slider's value changes due to user input.
   final ValueChanged<double>? onChanged;
@@ -64,7 +67,7 @@ class GradientCircularSlider extends StatefulWidget {
   final Color? ringBackgroundColor;
 
   /// Duration for animating programmatic value changes.
-  final Duration animationDuration;
+  final Duration sweepAnimationDuration;
 
   /// Curve used for animating programmatic value changes.
   final Curve animationCurve;
@@ -94,7 +97,7 @@ class GradientCircularSlider extends StatefulWidget {
     this.minValue = 0,
     this.maxValue = 100,
     required this.initialValue,
-    this.initialSweepAnimationDuration = const Duration(seconds: 0),
+    this.initialSweepDelayDuration = const Duration(seconds: 0),
     this.gradientColors = const [Colors.lightBlueAccent, Colors.blue],
     this.ringThickness = 20.0,
     this.prefix = r'$',
@@ -102,6 +105,7 @@ class GradientCircularSlider extends StatefulWidget {
     this.enableHaptics = true,
     this.textColor = Colors.white,
     this.decimalPrecision = 2,
+    this.isClampToInteger = false,
     this.onChanged,
     this.onChangeStart,
     this.onChangeEnd,
@@ -109,7 +113,7 @@ class GradientCircularSlider extends StatefulWidget {
     this.knobRadius = 15,
     this.knobColor,
     this.ringBackgroundColor,
-    this.animationDuration = const Duration(milliseconds: 500),
+    this.sweepAnimationDuration = const Duration(milliseconds: 500),
     this.animationCurve = Curves.easeInOut,
     this.labelText,
     this.labelStyle,
@@ -125,8 +129,8 @@ class GradientCircularSlider extends StatefulWidget {
             'prefixScale must be between 0 and 1'),
         assert(decimalPrecision >= 0, 'decimalPrecision must be non-negative'),
         assert(knobRadius > 0, 'knobRadius must be positive'),
-        assert(!initialSweepAnimationDuration.isNegative,
-            'initialSweepAnimationDuration must be zero or positive'),
+        assert(!initialSweepDelayDuration.isNegative,
+            'initialSweepDelayDuration must be zero or positive'),
         assert(editModeInputSpacing >= 0,
             'editModeInputSpacing must be zero or positive'),
         assert(editModeScaleFactor > 0 && editModeScaleFactor <= 1,
@@ -202,7 +206,7 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
     widget.controller?._updateEditingState(_isEditing);
     _valueAnimationController = AnimationController(
       vsync: this,
-      duration: widget.animationDuration,
+      duration: widget.sweepAnimationDuration,
       value: _normalizeValue(widget.minValue),
     );
     _sizeAnimationController = AnimationController(
@@ -307,7 +311,7 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
   }
 
   void _scheduleInitialSweep() {
-    Future<void>.delayed(widget.initialSweepAnimationDuration, () {
+    Future<void>.delayed(widget.initialSweepDelayDuration, () {
       if (!mounted || _isDragging || _isEditing) return;
       _animateToValue(
         widget.initialValue,
@@ -323,7 +327,7 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
     final normalizedValue = _normalizeValue(clampedValue);
     _valueAnimationController.animateTo(
       normalizedValue,
-      duration: durationOverride ?? widget.animationDuration,
+      duration: durationOverride ?? widget.sweepAnimationDuration,
       curve: curveOverride ?? widget.animationCurve,
     );
     _setText(clampedValue.toStringAsFixed(widget.decimalPrecision));
@@ -378,6 +382,12 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
     );
   }
 
+  double _clampDragValue(double value) {
+    if (!widget.isClampToInteger) return value;
+    final snapped = value.roundToDouble();
+    return snapped.clamp(widget.minValue, widget.maxValue).toDouble();
+  }
+
   void _handlePanUpdate(Offset localPosition, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final angle =
@@ -414,8 +424,13 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
       return;
     }
 
-    _valueAnimationController.value = newNormalizedValue;
-    final denormalizedValue = _denormalizeValue(newNormalizedValue);
+    var denormalizedValue = _denormalizeValue(newNormalizedValue);
+    var normalizedValueForController = newNormalizedValue;
+    denormalizedValue = _clampDragValue(denormalizedValue);
+    if (widget.isClampToInteger) {
+      normalizedValueForController = _normalizeValue(denormalizedValue);
+    }
+    _valueAnimationController.value = normalizedValueForController;
     _setText(denormalizedValue.toStringAsFixed(widget.decimalPrecision));
     if (widget.enableHaptics) HapticFeedback.lightImpact();
     widget.onChanged?.call(denormalizedValue);
