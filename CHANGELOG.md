@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0 - Drag improvements
+
+- minor improvement changes
+
 ## 1.0.9 - Drag improvements
 
 - minor changes

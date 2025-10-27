@@ -496,10 +496,9 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
                 builder: (context, child) {
                   final denormalizedValue =
                       _denormalizeValue(_valueAnimationController.value);
-                  final displayValue =
-                      widget.shouldClampToInteger && _isDragging
-                          ? _clampDragValue(denormalizedValue)
-                          : denormalizedValue;
+                  final displayValue = widget.shouldClampToInteger
+                      ? _clampDragValue(denormalizedValue)
+                      : denormalizedValue;
 
                   final alignment = Alignment.lerp(
                     Alignment.center,
