@@ -90,6 +90,9 @@ class GradientCircularSlider extends StatefulWidget {
   /// Scale factor applied to the circular slider while in edit mode (0 < value <= 1).
   final double editModeScaleFactor;
 
+  /// Whether to show the cursor in the text field while in edit mode.
+  final bool showCursor;
+
   /// Creates a gradient circular slider with customizable visuals and behavior.
   GradientCircularSlider({
     super.key,
@@ -124,6 +127,7 @@ class GradientCircularSlider extends StatefulWidget {
     this.innerLabelStyle,
     this.editModeInputSpacing = 30.0,
     this.editModeScaleFactor = 0.5,
+    this.showCursor = false,
   })  : assert(minValue < maxValue, 'minValue must be less than maxValue'),
         assert(initialValue >= minValue && initialValue <= maxValue,
             'initialValue must be between minValue and maxValue'),
@@ -724,7 +728,7 @@ class _GradientCircularSliderState extends State<GradientCircularSlider>
                     controller: _textController,
                     focusNode: _focusNode,
                     textAlign: TextAlign.left,
-                    showCursor: false,
+                    showCursor: widget.showCursor,
                     style: valueStyle,
                     maxLines: 1,
                     keyboardType: textInputType,

@@ -125,6 +125,7 @@ class _DemoPageState extends State<DemoPage> {
                       spreadRadius: 3,
                     ),
                   ],
+                  showCursor: true,
                   onChanged: (val) {
                     setState(() {
                       _currentValue = val;

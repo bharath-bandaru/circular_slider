@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0 - Cursor control & dependency updates
+
+- Added `showCursor` parameter to control cursor visibility in edit mode text field (defaults to `false`).
+- Updated `flutter_lints` to `^6.0.0` for compatibility with the latest Flutter tooling.
+- Removed unnecessary library declaration to resolve `unnecessary_library_name` lint.
+
 ## 1.1.0 - Drag improvements
 
 - minor improvement changes
